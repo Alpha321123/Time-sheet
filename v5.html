@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Flexible Work Timesheet (Compact)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+body { font-family: Arial, sans-serif; margin: 1rem; }
+h1 { font-size: 1.4rem; }
+button { margin: 0.25rem; }
+</style>
+</head>
+<body>
+<h1>Flexible Work Timesheet (Compact)</h1>
+<p>This is the fixed downloadable HTML file.</p>
+<button onclick="alert('Use proposed works')">Use proposed</button>
+<button onclick="alert('Clear works')">Clear</button>
+<p id="joke"></p>
+<script>
+const jokes = [
+  "Why did the biologist break up with the physicist? Too many constants.",
+  "I tried to make a chemistry joke… but there was no reaction.",
+  "A statistician drowned crossing a river that was only one metre deep on average."
+];
+const i = Math.floor(Date.now()/86400000) % jokes.length;
+document.getElementById('joke').textContent = jokes[i];
+</script>
+</body>
+</html>
