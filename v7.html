@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Flexible Work Timesheet</title>
+<style>
+:root{
+  --bg1:#fff8f1; --bg2:#fff1f2; --bg3:#f0fdf4; --bg4:#eff6ff;
+  --text:#162334; --muted:#5f6d7e; --border:rgba(148,163,184,.22);
+  --panel:rgba(255,255,255,.92); --panel-2:rgba(255,255,255,.97); --shadow:0 18px 40px rgba(31,41,55,.10); --shadow-sm:0 8px 18px rgba(31,41,55,.08);
+  --primary:#7c3aed; --primary2:#8b5cf6; --teal:#0f766e; --teal2:#14b8a6; --navy:#1d3557; --navy2:#355c8a;
+  --rose:#e11d48; --positive:#047857; --negative:#dc2626; --warning:#9a3412; --warning-bg:#fff7ed; --warning-border:#fdba74;
+  --radius-xl:26px; --radius-lg:18px; --radius-md:12px; --font-scale:1; --surface-blur:14px;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Arial,sans-serif;color:var(--text);background:
+radial-gradient(circle at top left, rgba(251,191,36,.16), transparent 22%),
+radial-gradient(circle at top right, rgba(244,114,182,.14), transparent 24%),
+radial-gradient(circle at bottom left, rgba(20,184,166,.15), transparent 24%),
+radial-gradient(circle at bottom right, rgba(96,165,250,.16), transparent 22%),
+linear-gradient(135deg,var(--bg1),var(--bg2),var(--bg3),var(--bg4));min-height:100vh;padding:12px;font-size:calc(16px * var(--font-scale))}
+.wrap{max-width:1560px;margin:0 auto}
+.shell{position:relative;background:rgba(255,255,255,.88);backdrop-filter:blur(var(--surface-blur));border:1px solid rgba(255,255,255,.6);border-radius:var(--radius-xl);padding:12px;box-shadow:var(--shadow)}
+.topbar{display:grid;gap:8px;padding-right:40px}
+.title-row{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.title-wrap{display:grid;gap:4px;min-width:0}
+h1{margin:0;font-size:clamp(1.8rem,2.7vw,3rem);line-height:1.02;letter-spacing:-.04em}
+.subtitle,.joke{margin:0;color:var(--muted);font-size:.92rem;line-height:1.42}
+.joke-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.joke{font-style:italic;flex:1 1 520px;min-width:220px}
+.reset-corner{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:999px;border:1px solid rgba(225,29,72,.28);background:rgba(255,255,255,.92);color:var(--rose);font-weight:900;cursor:pointer}
+.mode-switch{position:absolute;top:8px;right:46px}
+.btn{border:0;border-radius:10px;padding:8px 10px;color:#fff;cursor:pointer;font:inherit;font-weight:800;font-size:.84rem;white-space:nowrap;box-shadow:var(--shadow-sm);transition:transform .12s ease, filter .12s ease}.btn:hover{transform:translateY(-1px);filter:saturate(1.04)}.btn:active{transform:translateY(0)}
+.btn-primary{background:linear-gradient(180deg,var(--primary2),var(--primary))}.btn-teal{background:linear-gradient(180deg,var(--teal2),var(--teal))}.btn-navy{background:linear-gradient(180deg,var(--navy2),var(--navy))}.btn-soft{background:#f8fafc;color:#334155;border:1px solid #e2e8f0;box-shadow:none}.btn-small{padding:6px 9px;font-size:.74rem}.btn-tiny{padding:4px 7px;font-size:.68rem}
+.actions,.quick-picks,.card-actions{display:flex;gap:6px;flex-wrap:wrap}
+.notice{display:none;border-radius:12px;padding:8px 10px;background:var(--warning-bg);border:1px solid var(--warning-border);color:var(--warning);font-weight:700;font-size:.84rem}
+.stack{display:grid;gap:8px;margin-top:8px}
+.toolbar{display:grid;grid-template-columns:minmax(300px,460px) minmax(0,1fr);gap:8px;align-items:start}
+.panel{background:linear-gradient(180deg,var(--panel-2),var(--panel));border:1px solid rgba(255,255,255,.65);border-radius:var(--radius-lg);padding:10px;box-shadow:var(--shadow-sm)}
+.week-panel{display:grid;gap:6px}.week-panel label,.mini-note,.week-caption{color:var(--muted);font-weight:800}.week-caption{font-size:.88rem}.mini-note{font-size:.78rem;line-height:1.35}
+details.help-details summary{cursor:pointer;font-weight:800;color:var(--muted)}details.help-details .help-content{margin-top:8px;font-size:.8rem;color:var(--muted);line-height:1.45;display:grid;gap:8px}details.help-details ol{margin:0;padding-left:18px}
+.recommendations{display:grid;gap:6px;margin-top:8px;font-size:.8rem;color:var(--muted)}
+.field,select,input,textarea{width:100%;min-height:36px;padding:7px 10px;border-radius:10px;border:1px solid rgba(148,163,184,.38);background:#fff;color:var(--text);font:inherit;font-size:.84rem}
+.field:focus,select:focus,input:focus,textarea:focus{outline:none;box-shadow:0 0 0 4px rgba(124,58,237,.14);border-color:rgba(124,58,237,.42)}
+textarea{min-height:44px;resize:vertical}
+.summary{display:grid;gap:6px;grid-template-columns:repeat(4,minmax(118px,1fr))}
+.tile{display:flex;flex-direction:column;justify-content:center;gap:3px;min-height:76px;padding:10px;border-radius:14px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.93));overflow:hidden}
+.tile-label{color:var(--muted);font-size:.72rem;font-weight:800;white-space:nowrap}.tile-value{font-weight:900;font-size:clamp(.84rem,1vw,1rem);line-height:1.18;overflow-wrap:anywhere}.positive{color:var(--positive)}.negative{color:var(--negative)}
+.table-card{padding:6px;overflow-x:auto}
+table{width:100%;min-width:1030px;border-collapse:separate;border-spacing:0;border-radius:14px;overflow:hidden;background:rgba(255,255,255,.92);table-layout:fixed}
+thead th{padding:8px 6px;text-align:left;background:rgba(245,247,255,.98);color:#475569;font-size:.74rem;font-weight:900;border-bottom:1px solid var(--border);white-space:nowrap}
+tbody td{padding:7px 6px;border-bottom:1px solid rgba(241,245,249,.96);vertical-align:top;background:rgba(255,255,255,.88);font-size:.78rem}
+.day-col{font-weight:900;width:78px}.date-col{color:var(--muted);font-size:.74rem;width:90px}.status-col{width:94px}.start-col,.finish-col{width:128px}.lunch-col{width:88px}.clock-col{width:82px}.proposed-col{width:104px}.worked-col{width:72px}.delta-col{width:74px}.notes-col{width:120px}.clear-col{width:64px}
+.lunch-badge{display:inline-flex;align-items:center;justify-content:center;padding:5px 7px;border-radius:999px;background:linear-gradient(180deg,#fef3c7,#fde68a);color:#92400e;font-weight:800;border:1px solid rgba(245,158,11,.22);min-width:58px;font-size:.72rem}
+.quick-picks{margin-top:3px;gap:3px}.quick-picks .btn-soft{background:#fff7ed;border-color:#fed7aa}.proposed-cell small{display:block;margin-top:2px;color:var(--muted);font-weight:700;line-height:1.2;font-size:.68rem}.notes-input{min-height:38px;font-size:.76rem}.finish-stack{display:grid;gap:3px}.status-badge{display:inline-flex;align-items:center;gap:8px;padding:5px 7px;border-radius:999px;background:#f8fafc;color:#475569;border:1px solid #e2e8f0;font-weight:800;font-size:.7rem}
+.mobile-list,.simple-list{display:none;gap:8px}
+.card,.simple-card{padding:10px;border-radius:16px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:var(--shadow-sm)}
+.card-top,.simple-top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.card-day,.simple-day{font-weight:900}.card-date,.simple-date{color:var(--muted);font-size:.82rem}
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.card-clock,.simple-clock{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;align-items:center}.card-bottom,.simple-bottom{margin-top:8px;display:grid;gap:5px;color:var(--muted);font-size:.82rem}
+.simple-card{display:grid;gap:8px}.simple-times{display:flex;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:.84rem}
+.footer{padding:8px 10px}.help{margin:0;color:var(--muted);font-size:.78rem;line-height:1.35}
+.modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.42);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:18px;z-index:40}.modal-backdrop.show{display:flex}
+.modal{width:min(980px,100%);max-height:92vh;overflow:auto;padding:18px;border-radius:24px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(255,255,255,.92));border:1px solid rgba(255,255,255,.65);box-shadow:var(--shadow)}
+.modal h2{margin:0 0 6px}.modal p{color:var(--muted);line-height:1.5}.modal-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}.modal-actions{margin-top:16px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}.field-block{display:grid;gap:6px}.field-block label{font-weight:800;color:var(--muted);font-size:.82rem}.section-label{grid-column:1/-1;font-size:.8rem;color:#334155;font-weight:900;padding-top:4px;border-top:1px solid rgba(148,163,184,.18)}
+.print-header{display:none}#celebration{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:60}.burst{position:absolute;width:16px;height:16px;border-radius:999px;opacity:0;animation:burst 1.8s ease-out forwards;box-shadow:0 0 12px currentColor}.petal{position:absolute;font-size:20px;opacity:0;animation:floatAway 2.2s ease-out forwards;text-shadow:0 6px 10px rgba(31,41,55,.12)}@keyframes burst{0%{transform:translate(0,0) scale(.2);opacity:1}80%{opacity:.92}100%{transform:translate(var(--x),var(--y)) scale(1.4);opacity:0}}@keyframes floatAway{0%{transform:translate(0,0) scale(.8) rotate(0deg);opacity:1}100%{transform:translate(var(--x),var(--y)) scale(1.4) rotate(var(--r));opacity:0}}
+@media (max-width:1180px){.toolbar{grid-template-columns:1fr}.summary{grid-template-columns:repeat(4,minmax(100px,1fr))}.modal-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:920px){.summary{grid-template-columns:repeat(2,minmax(110px,1fr))}.table-card{display:none}.mobile-list{display:grid}}
+@media (max-width:760px){body{padding:8px}.shell{padding:10px}.actions{width:100%}.actions .btn{flex:1 1 calc(50% - 8px)}.card-grid,.modal-grid{grid-template-columns:1fr}}
+@media (max-width:520px){.summary{grid-template-columns:1fr}.actions .btn{flex-basis:100%}.topbar{padding-right:0}.reset-corner{top:8px;right:8px}.mode-switch{top:44px;right:8px}.joke-row{align-items:stretch}}
+@media print{body{background:white!important;padding:0}.actions,.mini-note,.mobile-list,.simple-list,.notice,.footer,.quick-picks,.clock-col,.clear-col,.modal-backdrop,.joke-row,.reset-corner,.mode-switch,details.help-details,.recommendations{display:none!important}.wrap,.shell,.panel,.table-card{box-shadow:none!important;border:0!important;background:white!important}.shell{padding:0!important}.print-header{display:block;margin-bottom:18px}.table-card{display:block!important;padding:0!important;overflow:visible!important}table{min-width:0!important;width:100%!important}thead th,tbody td{border-color:#d1d5db!important}}
+</style>
+</head>
+<body>
+<div id="celebration"></div>
+<div class="wrap"><section class="shell">
+<button id="resetCornerBtn" class="reset-corner" title="Reset all saved data">↺</button>
+<button id="modeSwitchBtn" class="btn btn-soft btn-small mode-switch" type="button">Simple mode</button>
+<div class="topbar">
+  <div class="title-row"><div class="title-wrap">
+    <h1 id="pageTitle">Flexible Work Timesheet</h1>
+    <p class="subtitle">Sharper visibility, richer settings, inherited data, and a one-click Simple mode for just clock in / clock out.</p>
+    <div class="joke-row"><p id="jokeOfDay" class="joke"></p><button id="newJokeBtn" class="btn btn-soft btn-small" type="button">New joke</button></div>
+  </div></div>
+  <div class="actions">
+    <button id="todayWeekBtn" class="btn btn-soft">Current week</button>
+    <button id="prevWeekBtn" class="btn btn-navy">← Previous</button>
+    <button id="nextWeekBtn" class="btn btn-teal">Next Week</button>
+    <button id="printBtn" class="btn btn-soft">Print</button>
+    <button id="settingsBtn" class="btn btn-primary">Settings</button>
+    <button id="exportCsvBtn" class="btn btn-navy">CSV</button>
+    <button id="exportXlsBtn" class="btn btn-primary">Excel</button>
+  </div>
+</div>
+<div class="stack">
+  <div id="notice" class="notice"></div>
+  <div class="toolbar">
+    <div class="panel week-panel">
+      <label for="weekSelect">Choose week</label>
+      <select id="weekSelect" class="field"></select>
+      <div id="weekCaption" class="week-caption"></div>
+      <div class="mini-note">This version migrates your previous saved data, keeps per-day lunch possible, and can always jump to the current week.</div>
+      <details class="help-details" id="helpDetails">
+        <summary>How to use</summary>
+        <div class="help-content">
+          <ol>
+            <li><strong>Step 1:</strong> Choose a week, or click <strong>Current week</strong>.</li>
+            <li><strong>Step 2:</strong> Pick a status for each day.</li>
+            <li><strong>Step 3:</strong> Set Start, then use <strong>Use proposed</strong> to fill Finish quickly.</li>
+            <li><strong>Step 4:</strong> Change lunch for a specific day in the Lunch column, or set defaults and presets in <strong>Settings</strong>.</li>
+            <li><strong>Step 5:</strong> Click <strong>Simple mode</strong> in the top-right if you want a minimal clock in / clock out view.</li>
+          </ol>
+        </div>
+      </details>
+      <div class="recommendations" id="recommendationsBox"></div>
+    </div>
+    <div class="panel summary">
+      <div class="tile"><div class="tile-label">Current time</div><div id="currentTime" class="tile-value">--:--</div></div>
+      <div class="tile"><div class="tile-label">Today remaining</div><div id="remainingToday" class="tile-value">Set start</div></div>
+      <div class="tile"><div class="tile-label">Friday plan</div><div id="fridayPlan" class="tile-value">Waiting…</div></div>
+      <div class="tile"><div class="tile-label">Carry-in</div><div id="carryIn" class="tile-value positive">+0.00h</div></div>
+      <div class="tile"><div class="tile-label">This week</div><div id="weekBalance" class="tile-value positive">+0.00h</div></div>
+      <div class="tile"><div class="tile-label">Carry-out</div><div id="carryOut" class="tile-value positive">+0.00h</div></div>
+      <div class="tile"><div class="tile-label">Total balance</div><div id="totalBalance" class="tile-value positive">+0.00h</div></div>
+      <div class="tile"><div class="tile-label">Friday target</div><div id="fridayTarget" class="tile-value positive">7.25h</div></div>
+    </div>
+  </div>
+  <div class="print-header"><h2 id="printTitle">Flexible Work Timesheet</h2><p id="printWeek"></p></div>
+  <div class="panel table-card" id="tableCard"><table>
+    <thead><tr>
+      <th class="day-col">Day</th><th class="date-col">Date</th><th class="status-col">Status</th><th class="start-col">Start</th><th class="lunch-col">Lunch</th><th class="finish-col">Finish</th><th class="clock-col">Clock</th><th class="proposed-col">Proposed</th><th class="worked-col">Worked</th><th class="delta-col">Δ</th><th class="notes-col">Notes</th><th class="clear-col">Clear</th>
+    </tr></thead><tbody id="tableBody"></tbody></table></div>
+  <div id="simpleList" class="simple-list"></div>
+  <div id="mobileList" class="mobile-list"></div>
+  <div class="panel footer"><p class="help">Tip: turn on “Always jump to current week on open” in Settings if you always want the file to open to the right week.</p></div>
+</div></section></div>
+
+<div id="settingsModal" class="modal-backdrop" aria-hidden="true"><div class="modal">
+  <h2>Settings</h2><p>Control hours, per-day lunch behaviour, week behaviour, visual design, and backup/restore. Settings are saved locally in your browser.</p>
+  <div class="modal-grid">
+    <div class="section-label">Identity & hours</div>
+    <div class="field-block"><label for="nameInput">Your name</label><input id="nameInput" type="text" maxlength="60" placeholder="Enter your name" /></div>
+    <div class="field-block"><label for="dailyHoursInput">Daily target hours</label><input id="dailyHoursInput" type="number" min="1" max="12" step="0.25" value="7.25" /></div>
+    <div class="field-block"><label for="lunchInput">Default lunch minutes</label><input id="lunchInput" type="number" min="0" max="120" step="5" value="30" /></div>
+    <div class="field-block"><label for="workdayStartInput">Earliest time</label><input id="workdayStartInput" type="time" step="900" value="07:00" /></div>
+    <div class="field-block"><label for="workdayEndInput">Latest time</label><input id="workdayEndInput" type="time" step="900" value="19:00" /></div>
+    <div class="field-block"><label for="intervalInput">Time interval (minutes)</label><select id="intervalInput" class="field"><option value="15">15</option><option value="30">30</option></select></div>
+
+    <div class="section-label">Lunch & quick buttons</div>
+    <div class="field-block"><label for="lunchPreset1Input">Lunch preset 1</label><input id="lunchPreset1Input" type="number" min="0" max="120" step="5" value="0" /></div>
+    <div class="field-block"><label for="lunchPreset2Input">Lunch preset 2</label><input id="lunchPreset2Input" type="number" min="0" max="120" step="5" value="30" /></div>
+    <div class="field-block"><label for="lunchPreset3Input">Lunch preset 3</label><input id="lunchPreset3Input" type="number" min="0" max="120" step="5" value="60" /></div>
+    <div class="field-block"><label for="quick1">Quick start 1</label><input id="quick1" type="time" step="900" /></div>
+    <div class="field-block"><label for="quick2">Quick start 2</label><input id="quick2" type="time" step="900" /></div>
+    <div class="field-block"><label for="quick3">Quick start 3</label><input id="quick3" type="time" step="900" /></div>
+    <div class="field-block"><label for="quick4">Quick start 4</label><input id="quick4" type="time" step="900" /></div>
+    <div class="field-block"><label for="fridayThresholdInput">Friday short/long threshold (hours)</label><input id="fridayThresholdInput" type="number" min="0" max="2" step="0.05" value="0.25" /></div>
+
+    <div class="section-label">Visibility & design</div>
+    <div class="field-block"><label for="densityInput">Density</label><select id="densityInput" class="field"><option value="compact">Compact</option><option value="comfortable">Comfortable</option></select></div>
+    <div class="field-block"><label for="fontScaleInput">Font size</label><select id="fontScaleInput" class="field"><option value="0.95">Small</option><option value="1">Normal</option><option value="1.08">Large</option></select></div>
+    <div class="field-block"><label for="contrastInput">Contrast</label><select id="contrastInput" class="field"><option value="normal">Normal</option><option value="strong">Strong</option></select></div>
+    <div class="field-block"><label for="tileCountInput">Summary tiles per row (desktop)</label><select id="tileCountInput" class="field"><option value="4">4</option><option value="3">3</option><option value="2">2</option></select></div>
+    <div class="field-block"><label for="showJokesInput">Show jokes</label><select id="showJokesInput" class="field"><option value="true">Yes</option><option value="false">No</option></select></div>
+    <div class="field-block"><label for="helpOpenInput">Open help by default</label><select id="helpOpenInput" class="field"><option value="false">No</option><option value="true">Yes</option></select></div>
+    <div class="field-block"><label for="simpleModeInput">Open in Simple mode by default</label><select id="simpleModeInput" class="field"><option value="false">No</option><option value="true">Yes</option></select></div>
+
+    <div class="section-label">Open behaviour & backup</div>
+    <div class="field-block"><label for="autoJumpInput">Always jump to current week on open</label><select id="autoJumpInput" class="field"><option value="true">Yes</option><option value="false">No</option></select></div>
+    <div class="field-block"><label for="rememberCurrentInput">Remember last viewed week</label><select id="rememberCurrentInput" class="field"><option value="true">Yes</option><option value="false">No</option></select></div>
+    <div class="field-block"><label for="celebrationInput">Clock-out celebration</label><select id="celebrationInput" class="field"><option value="true">Yes</option><option value="false">No</option></select></div>
+    <div class="field-block"><label>&nbsp;</label><button id="exportBackupBtn" class="btn btn-navy" type="button">Export backup JSON</button></div>
+    <div class="field-block"><label>&nbsp;</label><button id="importBackupBtn" class="btn btn-soft" type="button">Import backup JSON</button><input id="importBackupFile" type="file" accept="application/json" style="display:none" /></div>
+  </div>
+  <div class="modal-actions"><button id="closeSettingsBtn" class="btn btn-soft">Close</button><button id="saveSettingsBtn" class="btn btn-primary">Save settings</button></div>
+</div></div>
+
+<div id="welcomeModal" class="modal-backdrop" aria-hidden="true"><div class="modal">
+  <h2>Welcome to your timesheet</h2><p>Before we begin, tell me what name should appear in the heading.</p>
+  <div class="field-block" style="margin-top:14px"><label for="welcomeNameInput">Your name</label><input id="welcomeNameInput" type="text" maxlength="60" placeholder="Enter your name" /></div>
+  <div class="modal-actions"><button id="welcomeSaveBtn" class="btn btn-primary">Start my timesheet</button></div>
+</div></div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'flex_timesheet_v12_inherit_simple';
+  const LEGACY_KEYS = ['flex_timesheet_v12_inherit_simple', 'flex_timesheet_enhanced_v11', 'flex_timesheet_restored_v10'];
+  const JOKE_KEY = 'flex_timesheet_jokes_v12';
+  const DAY_LABELS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+  const STATUS_OPTIONS = ['Work','Leave','Public holiday',"Don't want to work"];
+  const JOKES = ["Why do scientists trust atoms? Because atoms make up everything.", "I tried to make a chemistry joke, but there was no reaction.", "Why did the biologist break up with the physicist? Too many constants.", "A statistician drowned in a river that was one metre deep on average.", "My lab notebook and I are in a stable relationship: mostly observations.", "Why was the microscope calm? It focused on the little things.", "Why did the chemist enjoy nitrates? They were cheaper than day rates.", "I told a joke about sodium. Na, nobody laughed.", "The geologist took everything for granite.", "Why was the cell phone in biology class? It wanted better reception.", "I would tell a DNA joke, but it is too twisted.", "Why do physicists love summer? Great time for current events.", "The lab fridge and I have cool chemistry.", "Never trust an atom with your lunch. It splits things.", "The mathematician is good at parties because the jokes have real angles.", "Why did the enzyme go home? It was all catalysed out.", "The chemist was reading a book on helium. Could not put it down.", "Why was the hypothesis nervous? It had not been tested yet.", "Biology jokes are all about timing. Mitosis one too many and it divides the room.", "The physicist brought a ladder to the lab to reach a higher state.", "The scientist made up a belt from watches. It was a waist of time.", "Why do bacteria make bad secret agents? They divide under pressure.", "The astronomer was over the moon with the results.", "The data analyst did not panic. There was always a back-up plan.", "Why did the researcher sit on the clock? To work overtime.", "The chemist’s favourite dog is a labrador, naturally.", "Why was the photon late? It got carried away.", "The physicist had too much potential to stay grounded.", "Why do molecules gossip? They bond over everything.", "The microbiologist had a culture-filled day.", "The programmer in the lab said the experiment had too many bugs.", "I asked the centrifuge for advice. It said, let us spin this positively.", "The petri dish threw a party. It grew on everyone.", "Why do lasers never gossip? They stay focused.", "The scientist broke up with the calendar. Too many dates, not enough data.", "The lab assistant had a magnetic personality.", "Why did the pipette feel important? It handled every little drop.", "The microscope and telescope had a big argument. It was about perspective.", "Why was the control group so calm? It was used to nothing happening.", "The chemist was positive, then negative, then neutral. It was an ionic mood.", "Why did the formula blush? Too many solutions were looking at it.", "The botanist rooted for the whole team.", "Why do scientists make good neighbours? They keep things under control.", "The physicist’s favourite snack is a quantum chip: both eaten and uneaten.", "The geographer and chemist had great chemistry, but no map for it.", "Why was the beaker confident? It knew its capacity.", "The ecologist always looked on the bright side of the ecosystem.", "Why was the specimen calm? It was well preserved.", "The data set finally relaxed after being sorted out.", "Why did the thermometer get promoted? It had a rising profile.", "The spectrometer saw every shade of the problem.", "Why did the scientist carry a notebook? For every good point and decimal place.", "The geologist had rock-solid time management.", "Why did the statistician bring a life jacket? Too many risky averages.", "The chemist’s favourite exercise is running reactions.", "Why did the physicist stare at the lunch break? Time dilation.", "The cell biologist had excellent boundaries: a real membrane of steel.", "Why was the petri dish optimistic? It believed things would grow from here.", "The lab timer really knows how to count on you.", "Why did the researcher take a ruler to bed? To measure sleep length.", "The beaker stayed humble because it knew its limits.", "The graph was dramatic, but only on the y-axis.", "The sample was organised because it had a label for every occasion.", "The centrifuge loves stories with a good spin.", "The spreadsheet was calm because every column had a purpose.", "The pipette believes every big result starts with one small drop.", "The telescope is optimistic because it always looks up.", "The freezer never loses its cool during audits.", "The buffer helps everyone stay stable under pressure.", "The field notebook never forgets the plot.", "The microscope makes tiny issues look very important.", "The control sample refuses to overreact.", "The formula was confident because it had a solid solution.", "The researcher likes tidy benches and tidy conclusions.", "The lab timer says every second counts.", "The atom joined the team because it wanted to bond.", "The biologist likes parties with good culture.", "The chemist enjoys tea because it is a proper solution.", "The physicist stays current with all the latest waves.", "The statistician never jumps to conclusions without intervals.", "The geologist tells layered jokes.", "The ecologist keeps everything in balance.", "The petri dish believes growth is a mindset.", "The spectroscope adds colour to every meeting.", "The molecule avoids drama and prefers stable bonds.", "The scientist likes weekends because there are fewer variables.", "The lab sink is philosophical because it lets everything flow.", "The proton stays positive in difficult conditions.", "The neutron enjoys free coffee because there is no charge.", "The graph went to therapy for its ups and downs.", "The botanist’s plans always have strong roots.", "The meteorologist makes excellent forecasts and even better excuses.", "The algorithm likes order and hates messy inputs.", "The assay was sensitive, but in a good way.", "The reagent was invited because it always brings something to the mix.", "The specimen kept still because it was well preserved.", "The sensor likes feedback when it is properly calibrated.", "The field sample travelled a lot but stayed grounded.", "The analyst brought a ruler because everything needed measuring.", "The office coffee had strong chemistry with the whole team."];
+  const DEFAULT_SETTINGS = {
+    name:'', lunchMinutes:30, lunchPresets:[0,30,60], dailyHours:7.25, workdayStart:'07:00', workdayEnd:'19:00', intervalMinutes:15,
+    quickStartTimes:['07:30','08:00','08:30','09:00'], fridayThreshold:0.25, density:'compact', fontScale:1,
+    contrast:'normal', tileCount:4, autoJumpToCurrentWeek:true, rememberCurrentWeek:true, showJokes:true,
+    helpOpen:false, celebration:true, simpleMode:false, weekStartsOn:'monday'
+  };
+
+  const els = {
+    title: document.getElementById('pageTitle'), joke: document.getElementById('jokeOfDay'), jokeRow: document.querySelector('.joke-row'), notice: document.getElementById('notice'),
+    weekSelect: document.getElementById('weekSelect'), weekCaption: document.getElementById('weekCaption'), currentTime: document.getElementById('currentTime'),
+    remainingToday: document.getElementById('remainingToday'), fridayPlan: document.getElementById('fridayPlan'), carryIn: document.getElementById('carryIn'),
+    weekBalance: document.getElementById('weekBalance'), carryOut: document.getElementById('carryOut'), totalBalance: document.getElementById('totalBalance'), fridayTarget: document.getElementById('fridayTarget'),
+    tableBody: document.getElementById('tableBody'), mobileList: document.getElementById('mobileList'), simpleList: document.getElementById('simpleList'), tableCard: document.getElementById('tableCard'),
+    printTitle: document.getElementById('printTitle'), printWeek: document.getElementById('printWeek'), settingsModal: document.getElementById('settingsModal'), welcomeModal: document.getElementById('welcomeModal'),
+    recommendationsBox: document.getElementById('recommendationsBox'), helpDetails: document.getElementById('helpDetails'), celebration: document.getElementById('celebration'), modeSwitchBtn: document.getElementById('modeSwitchBtn'),
+    nameInput: document.getElementById('nameInput'), dailyHoursInput: document.getElementById('dailyHoursInput'), lunchInput: document.getElementById('lunchInput'),
+    lunchPreset1Input: document.getElementById('lunchPreset1Input'), lunchPreset2Input: document.getElementById('lunchPreset2Input'), lunchPreset3Input: document.getElementById('lunchPreset3Input'),
+    workdayStartInput: document.getElementById('workdayStartInput'), workdayEndInput: document.getElementById('workdayEndInput'), intervalInput: document.getElementById('intervalInput'),
+    quickInputs: [document.getElementById('quick1'), document.getElementById('quick2'), document.getElementById('quick3'), document.getElementById('quick4')],
+    fridayThresholdInput: document.getElementById('fridayThresholdInput'), densityInput: document.getElementById('densityInput'), fontScaleInput: document.getElementById('fontScaleInput'),
+    contrastInput: document.getElementById('contrastInput'), tileCountInput: document.getElementById('tileCountInput'), showJokesInput: document.getElementById('showJokesInput'),
+    helpOpenInput: document.getElementById('helpOpenInput'), simpleModeInput: document.getElementById('simpleModeInput'), autoJumpInput: document.getElementById('autoJumpInput'),
+    rememberCurrentInput: document.getElementById('rememberCurrentInput'), celebrationInput: document.getElementById('celebrationInput'), exportBackupBtn: document.getElementById('exportBackupBtn'),
+    importBackupBtn: document.getElementById('importBackupBtn'), importBackupFile: document.getElementById('importBackupFile'), welcomeNameInput: document.getElementById('welcomeNameInput')
+  };
+
+  function boolish(v){ return v===true || v==='true'; }
+  function timeToMinutes(value){ if(!value) return null; const parts=value.split(':'); if(parts.length!==2) return null; const h=Number(parts[0]); const m=Number(parts[1]); if(Number.isNaN(h)||Number.isNaN(m)) return null; return h*60+m; }
+  function minutesToTime(minutes){ const safe=Math.max(0,minutes); const h=String(Math.floor(safe/60)).padStart(2,'0'); const m=String(safe%60).padStart(2,'0'); return `${h}:${m}`; }
+  function sortTimes(times){ return [...times].sort((a,b)=>timeToMinutes(a)-timeToMinutes(b)); }
+  function isoToDate(iso){ return new Date(iso+'T00:00:00'); }
+  function dateToISO(date){ const y=date.getFullYear(); const m=String(date.getMonth()+1).padStart(2,'0'); const d=String(date.getDate()).padStart(2,'0'); return `${y}-${m}-${d}`; }
+  function addDays(date,days){ const copy=new Date(date.getFullYear(),date.getMonth(),date.getDate()); copy.setDate(copy.getDate()+days); return copy; }
+  function startOfWeek(date){ const copy=new Date(date.getFullYear(),date.getMonth(),date.getDate()); const day=copy.getDay(); copy.setDate(copy.getDate() + (day===0 ? -6 : 1-day)); return copy; }
+  function currentWeekMondayISO(){ return dateToISO(startOfWeek(new Date())); }
+  function formatDatePretty(iso){ return isoToDate(iso).toLocaleDateString(undefined,{day:'2-digit',month:'short',year:'numeric'}); }
+  function formatDateLong(iso){ return isoToDate(iso).toLocaleDateString(undefined,{weekday:'long',day:'2-digit',month:'long',year:'numeric'}); }
+  function createWeek(mondayISO){ const monday=isoToDate(mondayISO); return { monday:mondayISO, rows:DAY_LABELS.map((label,index)=>({ day:label, date:dateToISO(addDays(monday,index)), status:'Work', start:'', finish:'', notes:'', lunchMinutes:null })) }; }
+  function initialState(){ return { settings:{...DEFAULT_SETTINGS}, weeks:[createWeek(currentWeekMondayISO())], currentWeek:0 }; }
+
+  function mergeSettings(raw){
+    const s = raw || {};
+    return {
+      name: typeof s.name==='string' ? s.name : '',
+      lunchMinutes: Number(s.lunchMinutes)>=0 ? Number(s.lunchMinutes) : DEFAULT_SETTINGS.lunchMinutes,
+      lunchPresets: Array.isArray(s.lunchPresets) && s.lunchPresets.length>=3 ? s.lunchPresets.slice(0,3).map(v=>Math.max(0, Math.min(120, Number(v)||0))) : [...DEFAULT_SETTINGS.lunchPresets],
+      dailyHours: Number(s.dailyHours)>0 ? Number(s.dailyHours) : DEFAULT_SETTINGS.dailyHours,
+      workdayStart: typeof s.workdayStart==='string' ? s.workdayStart : DEFAULT_SETTINGS.workdayStart,
+      workdayEnd: typeof s.workdayEnd==='string' ? s.workdayEnd : DEFAULT_SETTINGS.workdayEnd,
+      intervalMinutes: [15,30].includes(Number(s.intervalMinutes)) ? Number(s.intervalMinutes) : DEFAULT_SETTINGS.intervalMinutes,
+      quickStartTimes: sortTimes(Array.isArray(s.quickStartTimes) ? s.quickStartTimes.slice(0,4) : DEFAULT_SETTINGS.quickStartTimes),
+      fridayThreshold: Number(s.fridayThreshold)>=0 ? Number(s.fridayThreshold) : DEFAULT_SETTINGS.fridayThreshold,
+      density: s.density==='comfortable' ? 'comfortable' : 'compact',
+      fontScale: [0.95,1,1.08].includes(Number(s.fontScale)) ? Number(s.fontScale) : DEFAULT_SETTINGS.fontScale,
+      contrast: s.contrast==='strong' ? 'strong' : 'normal',
+      tileCount: [2,3,4].includes(Number(s.tileCount)) ? Number(s.tileCount) : DEFAULT_SETTINGS.tileCount,
+      autoJumpToCurrentWeek: s.autoJumpToCurrentWeek!==undefined ? boolish(s.autoJumpToCurrentWeek) : DEFAULT_SETTINGS.autoJumpToCurrentWeek,
+      rememberCurrentWeek: s.rememberCurrentWeek!==undefined ? boolish(s.rememberCurrentWeek) : DEFAULT_SETTINGS.rememberCurrentWeek,
+      showJokes: s.showJokes!==undefined ? boolish(s.showJokes) : DEFAULT_SETTINGS.showJokes,
+      helpOpen: s.helpOpen!==undefined ? boolish(s.helpOpen) : DEFAULT_SETTINGS.helpOpen,
+      celebration: s.celebration!==undefined ? boolish(s.celebration) : DEFAULT_SETTINGS.celebration,
+      simpleMode: s.simpleMode!==undefined ? boolish(s.simpleMode) : DEFAULT_SETTINGS.simpleMode,
+      weekStartsOn:'monday'
+    };
+  }
+
+  function migrateState(parsed){
+    if(!parsed || !Array.isArray(parsed.weeks) || parsed.weeks.length===0) return initialState();
+    const settings = mergeSettings(parsed.settings);
+    const weeks = parsed.weeks.map((week)=> week && typeof week.monday==='string' && Array.isArray(week.rows) && week.rows.length===5 ? {
+      monday: week.monday,
+      rows: week.rows.map((row,index)=>({
+        day: DAY_LABELS[index],
+        date: row.date || dateToISO(addDays(isoToDate(week.monday),index)),
+        status: STATUS_OPTIONS.includes(row.status) ? row.status : 'Work',
+        start: typeof row.start==='string' ? row.start : '',
+        finish: typeof row.finish==='string' ? row.finish : '',
+        notes: typeof row.notes==='string' ? row.notes : '',
+        lunchMinutes: row.lunchMinutes===null || row.lunchMinutes===undefined || row.lunchMinutes==='' ? null : Math.max(0, Math.min(120, Number(row.lunchMinutes)||0))
+      }))
+    } : createWeek(currentWeekMondayISO())).sort((a,b)=>a.monday.localeCompare(b.monday));
+    return { settings, weeks, currentWeek: Math.max(0, Math.min(Number(parsed.currentWeek)||0, weeks.length-1)) };
+  }
+
+  function loadState(){
+    for(const key of LEGACY_KEYS){
+      try{
+        const raw = localStorage.getItem(key);
+        if(!raw) continue;
+        const migrated = migrateState(JSON.parse(raw));
+        // Persist into current key if loaded from legacy key.
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+        return migrated;
+      }catch(_){ /* ignore broken legacy state */ }
+    }
+    return initialState();
+  }
+
+  let state = loadState();
+  function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+  function getTimeOptions(){ const options=[]; const start=timeToMinutes(state.settings.workdayStart); const end=timeToMinutes(state.settings.workdayEnd); const interval=Number(state.settings.intervalMinutes); for(let m=start; m<=end; m+=interval) options.push(minutesToTime(m)); return options; }
+  function getLunchOptions(){ const values = [state.settings.lunchMinutes, ...state.settings.lunchPresets].map(v=>Math.max(0, Math.min(120, Number(v)||0))); return [...new Set(values)].sort((a,b)=>a-b); }
+  function rowLunch(row){ return row.lunchMinutes===null || row.lunchMinutes===undefined || row.lunchMinutes==='' ? Number(state.settings.lunchMinutes) : Number(row.lunchMinutes); }
+  function showNotice(message){ els.notice.textContent=message; els.notice.style.display='block'; clearTimeout(showNotice._timer); showNotice._timer=setTimeout(()=>{ els.notice.style.display='none'; }, 3600); }
+
+  function loadJokeState(){ try{ const raw=localStorage.getItem(JOKE_KEY); if(!raw) return { remaining:[], last:null }; const parsed=JSON.parse(raw); return { remaining:Array.isArray(parsed.remaining) ? parsed.remaining : [], last:Number.isInteger(parsed.last) ? parsed.last : null }; }catch(_){ return { remaining:[], last:null }; } }
+  function saveJokeState(obj){ localStorage.setItem(JOKE_KEY, JSON.stringify(obj)); }
+  function nextUniqueJoke(forceNew){ const jokeState = loadJokeState(); let remaining = jokeState.remaining.filter(i=>i>=0 && i<JOKES.length); if(!remaining.length) remaining = [...Array(JOKES.length).keys()]; if(forceNew && jokeState.last != null && remaining.length>1) remaining = remaining.filter(i=>i!==jokeState.last); if(!remaining.length) remaining = [...Array(JOKES.length).keys()]; const nextIndex = remaining[0]; saveJokeState({ remaining: remaining.slice(1), last: nextIndex }); els.joke.textContent = `Joke of the day: ${JOKES[nextIndex]}`; }
+
+  function ensureWeekExistsByMonday(mondayISO){
+    let index = state.weeks.findIndex(w=>w.monday===mondayISO);
+    if(index>=0) return index;
+    state.weeks.push(createWeek(mondayISO));
+    state.weeks.sort((a,b)=>a.monday.localeCompare(b.monday));
+    return state.weeks.findIndex(w=>w.monday===mondayISO);
+  }
+  function syncToCurrentWeek(forceOpen){
+    const idx = ensureWeekExistsByMonday(currentWeekMondayISO());
+    if(forceOpen || state.settings.autoJumpToCurrentWeek){ state.currentWeek = idx; }
+  }
+
+  function applyVisualSettings(){
+    document.documentElement.style.setProperty('--font-scale', String(state.settings.fontScale));
+    document.querySelector('.summary').style.gridTemplateColumns = `repeat(${state.settings.tileCount}, minmax(118px, 1fr))`;
+    document.documentElement.style.setProperty('--surface-blur', state.settings.density==='comfortable' ? '16px' : '14px');
+    document.querySelectorAll('.panel').forEach(el=>{ el.style.padding = state.settings.density==='comfortable' ? '12px' : '10px'; });
+    if(state.settings.contrast==='strong'){
+      document.documentElement.style.setProperty('--text', '#0f172a');
+      document.documentElement.style.setProperty('--muted', '#475569');
+    } else {
+      document.documentElement.style.setProperty('--text', '#162334');
+      document.documentElement.style.setProperty('--muted', '#5f6d7e');
+    }
+    els.jokeRow.style.display = state.settings.showJokes ? 'flex' : 'none';
+    els.helpDetails.open = !!state.settings.helpOpen;
+    els.modeSwitchBtn.textContent = state.settings.simpleMode ? 'Full mode' : 'Simple mode';
+    if(state.settings.simpleMode){
+      els.tableCard.style.display = 'none';
+      els.mobileList.style.display = 'none';
+      els.simpleList.style.display = 'grid';
+    } else {
+      els.tableCard.style.display = window.innerWidth <= 920 ? 'none' : 'block';
+      els.mobileList.style.display = window.innerWidth <= 920 ? 'grid' : 'none';
+      els.simpleList.style.display = 'none';
+    }
+  }
+
+  function updatePageTitle(){ const name=(state.settings.name||'').trim(); const title = name ? `${name}'s Flexible Work Timesheet` : 'Flexible Work Timesheet'; els.title.textContent=title; els.printTitle.textContent=title; }
+  function weekTargetForRows(rows){ return rows.reduce((sum,row)=>sum + (row.status==='Work' ? Number(state.settings.dailyHours) : 0), 0); }
+  function computeWeek(week){
+    const weekTarget=weekTargetForRows(week.rows);
+    const mondayToThursdayWorked = week.rows.slice(0,4).reduce((sum,row)=>{ if(row.status!=='Work') return sum; const start=timeToMinutes(row.start); const finish=timeToMinutes(row.finish); const rawWorked=start!=null && finish!=null ? (finish-start)/60 - (rowLunch(row)/60) : 0; return sum + Math.max(0, rawWorked); }, 0);
+    const fridayTargetWorked = week.rows[4].status==='Work' ? Math.max(0, weekTarget - mondayToThursdayWorked) : 0;
+    const rows = week.rows.map((row,index)=>{ const start=timeToMinutes(row.start); const finish=timeToMinutes(row.finish); const targetWorked=row.status!=='Work' ? 0 : (index===4 ? fridayTargetWorked : Number(state.settings.dailyHours)); const rawWorked=row.status==='Work' && start!=null && finish!=null ? (finish-start)/60 - (rowLunch(row)/60) : 0; const worked=Math.max(0,rawWorked); const delta=worked-targetWorked; const interval=Number(state.settings.intervalMinutes); const proposedFinishMinutes=row.status==='Work' && start!=null ? Math.round((start + (targetWorked + rowLunch(row)/60) * 60)/interval)*interval : null; const proposedFinish = proposedFinishMinutes!=null ? minutesToTime(proposedFinishMinutes) : ''; return { ...row, targetWorked, worked, delta, proposedFinishMinutes, proposedFinish }; });
+    const weekBalance = rows.reduce((sum,row)=>sum + row.worked,0) - weekTarget;
+    const threshold = Number(state.settings.fridayThreshold)||0.25;
+    let fridayPlan='Waiting for more data'; if(week.rows[4].status!=='Work') fridayPlan='Friday is off'; else if(fridayTargetWorked > Number(state.settings.dailyHours) + threshold) fridayPlan=`Long Friday likely: ${fridayTargetWorked.toFixed(2)}h work`; else if(fridayTargetWorked < Number(state.settings.dailyHours) - threshold) fridayPlan=`Short Friday possible: ${fridayTargetWorked.toFixed(2)}h work`; else fridayPlan='Friday looks normal';
+    return { rows, weekBalance, fridayTargetWorked, fridayPlan };
+  }
+  function computedWeeks(){ return state.weeks.map(computeWeek); }
+
+  function updateCurrentTime(currentComputed){
+    const now=new Date(); els.currentTime.textContent=now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    const todayISO = dateToISO(new Date()); const todayRow=currentComputed.rows.find(row=>row.date===todayISO);
+    if(!todayRow){ els.remainingToday.textContent='Not this week'; els.remainingToday.className='tile-value'; return; }
+    if(todayRow.status!=='Work'){ els.remainingToday.textContent='Off today'; els.remainingToday.className='tile-value'; return; }
+    if(!todayRow.start){ els.remainingToday.textContent='Set start'; els.remainingToday.className='tile-value'; return; }
+    if(todayRow.finish){ els.remainingToday.textContent='Done today'; els.remainingToday.className='tile-value positive'; return; }
+    if(todayRow.proposedFinishMinutes==null){ els.remainingToday.textContent='--'; els.remainingToday.className='tile-value'; return; }
+    const nowMinutes=now.getHours()*60 + now.getMinutes(); const diff=todayRow.proposedFinishMinutes - nowMinutes; const abs=Math.abs(diff); const hours=Math.floor(abs/60); const mins=String(abs%60).padStart(2,'0');
+    if(diff>=0){ els.remainingToday.textContent=`${hours}:${mins} left`; els.remainingToday.className='tile-value positive'; } else { els.remainingToday.textContent=`Past target ${hours}:${mins}`; els.remainingToday.className='tile-value negative'; }
+  }
+  function setSummary(el,value){ el.textContent=`${value>=0?'+':''}${value.toFixed(2)}h`; el.className=`tile-value ${value<0 ? 'negative':'positive'}`; }
+  function updateSummary(carryIn,weekBalance,carryOut,totalBalance,fridayTargetWorked,fridayPlan){ setSummary(els.carryIn,carryIn); setSummary(els.weekBalance,weekBalance); setSummary(els.carryOut,carryOut); setSummary(els.totalBalance,totalBalance); els.fridayTarget.textContent=`${fridayTargetWorked.toFixed(2)}h`; els.fridayTarget.className=`tile-value ${fridayTargetWorked > Number(state.settings.dailyHours) ? 'negative':'positive'}`; els.fridayPlan.textContent=fridayPlan; els.fridayPlan.className=`tile-value ${fridayTargetWorked > Number(state.settings.dailyHours) + Number(state.settings.fridayThreshold) ? 'negative':'positive'}`; }
+
+  function renderRecommendations(){
+    const list = [];
+    if(Number(state.settings.intervalMinutes)===30) list.push('Recommendation: use a 15-minute interval if you need finer start/finish control.');
+    if(state.settings.contrast==='normal') list.push('Recommendation: switch contrast to Strong if you want sharper labels and better readability.');
+    if(!state.settings.autoJumpToCurrentWeek) list.push('Recommendation: turn on “Always jump to current week” to make sure the file always opens to the correct week.');
+    if(!state.settings.simpleMode) list.push('Recommendation: use Simple mode on busy days if you only need Clock in and Clock out.');
+    if(!list.length) list.push('Looks good: this setup should open to the correct week, preserve old data, and stay quick to use.');
+    els.recommendationsBox.innerHTML = list.map(item=>`<div>• ${item}</div>`).join('');
+  }
+
+  function renderWeekOptions(){ els.weekSelect.innerHTML=''; state.weeks.forEach((week,index)=>{ const monday=isoToDate(week.monday); const friday=addDays(monday,4); const option=document.createElement('option'); option.value=String(index); option.textContent=`Week ${index+1} · ${monday.toLocaleDateString(undefined,{day:'2-digit',month:'short'})} – ${friday.toLocaleDateString(undefined,{day:'2-digit',month:'short'})}`; if(index===state.currentWeek) option.selected=true; els.weekSelect.appendChild(option); }); const currentWeek=state.weeks[state.currentWeek]; const monday=isoToDate(currentWeek.monday); const friday=addDays(monday,4); els.weekCaption.textContent=`Week commencing ${formatDateLong(currentWeek.monday)} · Friday ${friday.toLocaleDateString(undefined,{day:'2-digit',month:'long'})}`; els.printWeek.textContent=els.weekCaption.textContent; }
+  function buildSelect(options,value,placeholder,onChange,disabled){ const select=document.createElement('select'); select.className='field'; const empty=document.createElement('option'); empty.value=''; empty.textContent=placeholder || '--'; select.appendChild(empty); options.forEach(optValue=>{ const option=document.createElement('option'); option.value=String(optValue); option.textContent=String(optValue); if(String(optValue)===String(value)) option.selected=true; select.appendChild(option); }); if(disabled) select.disabled=true; select.addEventListener('change', onChange); return select; }
+  function buildStatusSelect(value,onChange){ return buildSelect(STATUS_OPTIONS,value,'Status',onChange,false); }
+  function buildTimeSelect(value,onChange,placeholder,disabled){ return buildSelect(getTimeOptions(),value,placeholder,onChange,disabled); }
+  function buildLunchSelect(value,onChange,disabled){ const select = buildSelect(getLunchOptions().map(v=>String(v)), value===null || value===undefined || value==='' ? '' : String(value), 'Default', onChange, disabled); return select; }
+  function quickButton(time,onClick,disabled,label){ const btn=document.createElement('button'); btn.type='button'; btn.className='btn btn-soft btn-tiny'; btn.textContent=label || time; btn.disabled=!!disabled; btn.addEventListener('click', onClick); return btn; }
+  function buildQuickPicks(index,disabled){ const wrap=document.createElement('div'); wrap.className='quick-picks'; sortTimes(state.settings.quickStartTimes).forEach(time=>wrap.appendChild(quickButton(time,()=>updateRow(index,'start',time,false),disabled))); return wrap; }
+  function buildFinishQuick(index,row,disabled){ const wrap=document.createElement('div'); wrap.className='quick-picks'; if(row.proposedFinish) wrap.appendChild(quickButton(row.proposedFinish,()=>updateRow(index,'finish',row.proposedFinish,false),disabled,'Use proposed')); return wrap; }
+  function buildClockButtons(index,disabled){ const wrap=document.createElement('div'); wrap.className='card-actions'; const inBtn=document.createElement('button'); inBtn.type='button'; inBtn.className='btn btn-soft btn-small'; inBtn.textContent='Clock in'; inBtn.disabled=!!disabled; inBtn.addEventListener('click',()=>clockNow(index,'start')); const outBtn=document.createElement('button'); outBtn.type='button'; outBtn.className='btn btn-soft btn-small'; outBtn.textContent='Clock out'; outBtn.disabled=!!disabled; outBtn.addEventListener('click',()=>clockNow(index,'finish')); wrap.append(inBtn,outBtn); return wrap; }
+
+  function renderTable(rows){
+    els.tableBody.innerHTML='';
+    rows.forEach((row,index)=>{
+      const disabled=row.status!=='Work';
+      const tr=document.createElement('tr');
+      const dayTd=document.createElement('td'); dayTd.className='day-col'; dayTd.textContent=row.day;
+      const dateTd=document.createElement('td'); dateTd.className='date-col'; dateTd.textContent=formatDatePretty(row.date);
+      const statusTd=document.createElement('td'); statusTd.className='status-col'; statusTd.appendChild(buildStatusSelect(row.status,e=>updateField(index,'status',e.target.value)));
+      const startTd=document.createElement('td'); startTd.className='start-col'; startTd.appendChild(buildTimeSelect(row.start,e=>updateRow(index,'start',e.target.value,false),'Start',disabled)); startTd.appendChild(buildQuickPicks(index,disabled));
+      const lunchTd=document.createElement('td'); lunchTd.className='lunch-col'; lunchTd.appendChild(buildLunchSelect(row.lunchMinutes,e=>updateField(index,'lunchMinutes', e.target.value==='' ? null : Number(e.target.value)),disabled));
+      const finishTd=document.createElement('td'); finishTd.className='finish-col'; const finishStack=document.createElement('div'); finishStack.className='finish-stack'; finishStack.appendChild(buildTimeSelect(row.finish,e=>updateRow(index,'finish',e.target.value,false),'Finish',disabled)); finishStack.appendChild(buildFinishQuick(index,row,disabled)); finishTd.appendChild(finishStack);
+      const clockTd=document.createElement('td'); clockTd.className='clock-col'; clockTd.appendChild(buildClockButtons(index,disabled));
+      const proposedTd=document.createElement('td'); proposedTd.className='proposed-cell proposed-col'; if(disabled) proposedTd.innerHTML=`<span class="status-badge">${row.status}</span><small>Target is zero for this day.</small>`; else proposedTd.innerHTML=row.proposedFinish ? `${row.proposedFinish}<small>${index===4 ? `Friday target ${row.targetWorked.toFixed(2)}h + ${rowLunch(row)}m lunch` : `${Number(state.settings.dailyHours).toFixed(2)}h + ${rowLunch(row)}m lunch`}</small>` : `<span style="color:#94a3b8;">—</span>`;
+      const workedTd=document.createElement('td'); workedTd.className='worked-col'; workedTd.textContent=`${row.worked.toFixed(2)} hrs`;
+      const deltaTd=document.createElement('td'); deltaTd.className=`delta-col ${row.delta<0 ? 'negative':'positive'}`; deltaTd.textContent=`${row.delta>=0?'+':''}${row.delta.toFixed(2)}h`;
+      const notesTd=document.createElement('td'); notesTd.className='notes-col'; const notes=document.createElement('textarea'); notes.className='notes-input'; notes.placeholder='Add notes…'; notes.value=row.notes || ''; notes.addEventListener('change',e=>updateField(index,'notes',e.target.value)); notesTd.appendChild(notes);
+      const clearTd=document.createElement('td'); clearTd.className='clear-col'; const clearBtn=document.createElement('button'); clearBtn.type='button'; clearBtn.className='btn btn-soft btn-small'; clearBtn.textContent='Clear'; clearBtn.addEventListener('click',()=>clearDay(index)); clearTd.appendChild(clearBtn);
+      tr.append(dayTd,dateTd,statusTd,startTd,lunchTd,finishTd,clockTd,proposedTd,workedTd,deltaTd,notesTd,clearTd);
+      els.tableBody.appendChild(tr);
+    });
+  }
+
+  function renderMobile(rows){
+    els.mobileList.innerHTML='';
+    rows.forEach((row,index)=>{
+      const disabled=row.status!=='Work';
+      const card=document.createElement('div'); card.className='card';
+      const top=document.createElement('div'); top.className='card-top'; top.innerHTML=`<div><div class="card-day">${row.day}</div><div class="card-date">${formatDatePretty(row.date)}</div></div><div><span class="${row.delta<0 ? 'negative':'positive'}" style="font-weight:900;">${row.delta>=0?'+':''}${row.delta.toFixed(2)}h</span></div>`;
+      const status=buildStatusSelect(row.status,e=>updateField(index,'status',e.target.value));
+      const grid=document.createElement('div'); grid.className='card-grid';
+      const finishWrap=document.createElement('div'); finishWrap.appendChild(buildTimeSelect(row.finish,e=>updateRow(index,'finish',e.target.value,false),'Finish',disabled)); finishWrap.appendChild(buildFinishQuick(index,row,disabled));
+      const lunchWrap=document.createElement('div'); lunchWrap.appendChild(buildLunchSelect(row.lunchMinutes,e=>updateField(index,'lunchMinutes', e.target.value==='' ? null : Number(e.target.value)),disabled));
+      grid.append(buildTimeSelect(row.start,e=>updateRow(index,'start',e.target.value,false),'Start',disabled), finishWrap, lunchWrap);
+      const quick=buildQuickPicks(index,disabled);
+      const clock=document.createElement('div'); clock.className='card-clock'; const lunchBadge=document.createElement('span'); lunchBadge.className='lunch-badge'; lunchBadge.textContent=`Lunch ${rowLunch(row)} min`; clock.append(buildClockButtons(index,disabled), lunchBadge);
+      const notes=document.createElement('textarea'); notes.placeholder='Add notes…'; notes.value=row.notes || ''; notes.addEventListener('change',e=>updateField(index,'notes',e.target.value));
+      const clearBtn=document.createElement('button'); clearBtn.type='button'; clearBtn.className='btn btn-soft btn-small'; clearBtn.textContent='Clear day'; clearBtn.addEventListener('click',()=>clearDay(index));
+      const bottom=document.createElement('div'); bottom.className='card-bottom'; bottom.innerHTML=`<div>${row.proposedFinish ? `Proposed finish: <strong>${row.proposedFinish}</strong>` : `<span style="color:#94a3b8;">No proposed finish yet</span>`}</div><div>${disabled ? `${row.status}: target is zero` : `${index===4 ? `Friday target ${row.targetWorked.toFixed(2)}h + ${rowLunch(row)}m lunch` : `Daily target ${Number(state.settings.dailyHours).toFixed(2)}h + ${rowLunch(row)}m lunch`}`}</div><div>Worked: <strong>${row.worked.toFixed(2)}h</strong></div>`;
+      card.append(top,status,grid,quick,clock,notes,clearBtn,bottom);
+      els.mobileList.appendChild(card);
+    });
+  }
+
+  function renderSimple(rows){
+    els.simpleList.innerHTML='';
+    rows.forEach((row,index)=>{
+      const disabled=row.status!=='Work';
+      const card=document.createElement('div'); card.className='simple-card';
+      card.innerHTML = `<div class="simple-top"><div><div class="simple-day">${row.day}</div><div class="simple-date">${formatDatePretty(row.date)}</div></div><div class="lunch-badge">Lunch ${rowLunch(row)} min</div></div>`;
+      const status = buildStatusSelect(row.status, e=>updateField(index,'status',e.target.value));
+      const clock = document.createElement('div'); clock.className='simple-clock'; clock.appendChild(buildClockButtons(index, disabled));
+      const times = document.createElement('div'); times.className='simple-times'; times.innerHTML = `<div>Start: <strong>${row.start || '—'}</strong></div><div>Finish: <strong>${row.finish || '—'}</strong></div><div>Worked: <strong>${row.worked.toFixed(2)}h</strong></div>`;
+      const bottom = document.createElement('div'); bottom.className='simple-bottom'; bottom.innerHTML = `${row.proposedFinish ? `<div>Proposed finish: <strong>${row.proposedFinish}</strong></div>` : `<div style="color:#94a3b8;">Set start to get a proposed finish</div>`}`;
+      const clearBtn=document.createElement('button'); clearBtn.type='button'; clearBtn.className='btn btn-soft btn-small'; clearBtn.textContent='Clear day'; clearBtn.addEventListener('click',()=>clearDay(index));
+      card.append(status, times, clock, bottom, clearBtn);
+      els.simpleList.appendChild(card);
+    });
+  }
+
+  function celebrateClockOut(){ if(!state.settings.celebration) return; const symbols=['✨','🎆','🎇','🌸','🌼','🧪','🔬']; const colors=['#f59e0b','#ec4899','#8b5cf6','#14b8a6','#60a5fa']; const originX=window.innerWidth*0.5; const originY=window.innerHeight*0.45; for(let i=0;i<18;i++){ const particle=document.createElement('span'); particle.className='burst'; particle.style.left=`${originX}px`; particle.style.top=`${originY}px`; particle.style.color=colors[i % colors.length]; const angle=(Math.PI*2*i)/18; const distance=70+Math.random()*90; particle.style.setProperty('--x',`${Math.cos(angle)*distance}px`); particle.style.setProperty('--y',`${Math.sin(angle)*distance}px`); els.celebration.appendChild(particle); particle.addEventListener('animationend',()=>particle.remove()); } for(let i=0;i<12;i++){ const petal=document.createElement('span'); petal.className='petal'; petal.textContent=symbols[i % symbols.length]; petal.style.left=`${originX}px`; petal.style.top=`${originY}px`; petal.style.setProperty('--x',`${Math.random()*220-110}px`); petal.style.setProperty('--y',`${120+Math.random()*120}px`); petal.style.setProperty('--r',`${Math.random()*220-110}deg`); els.celebration.appendChild(petal); petal.addEventListener('animationend',()=>petal.remove()); } }
+
+  function render(){
+    if(state.settings.autoJumpToCurrentWeek) syncToCurrentWeek(false);
+    saveState(); applyVisualSettings(); updatePageTitle(); if(state.settings.showJokes && !els.joke.textContent) nextUniqueJoke(false); if(!state.settings.showJokes) els.joke.textContent='';
+    const allWeeks=computedWeeks(); const current=allWeeks[state.currentWeek] || { rows:[], weekBalance:0, fridayTargetWorked:Number(state.settings.dailyHours), fridayPlan:'Waiting…' };
+    const carryIn=allWeeks.slice(0,state.currentWeek).reduce((sum,week)=>sum+week.weekBalance,0); const carryOut=carryIn + current.weekBalance; const totalBalance=allWeeks.reduce((sum,week)=>sum+week.weekBalance,0);
+    renderWeekOptions(); renderTable(current.rows); renderMobile(current.rows); renderSimple(current.rows); updateSummary(carryIn,current.weekBalance,carryOut,totalBalance,current.fridayTargetWorked,current.fridayPlan); updateCurrentTime(current); renderRecommendations();
+  }
+
+  function previousWeek(){ if(state.currentWeek>0){ state.currentWeek-=1; render(); } }
+  function nextWeek(){ const nextMonday = dateToISO(addDays(isoToDate(state.weeks[state.currentWeek].monday),7)); state.currentWeek = ensureWeekExistsByMonday(nextMonday); render(); }
+  function updateField(index,field,value){ const week=state.weeks[state.currentWeek]; if(!week || !week.rows[index]) return; const row={...week.rows[index],[field]:value}; if(field==='status' && row.status!=='Work'){ row.start=''; row.finish=''; } week.rows[index]=row; render(); }
+  function updateRow(index,field,value,silent){ const week=state.weeks[state.currentWeek]; if(!week || !week.rows[index]) return; const row={...week.rows[index],[field]:value}; const start=timeToMinutes(row.start); const finish=timeToMinutes(row.finish); if(start!=null && finish!=null && finish<start){ row.finish=row.start; if(!silent) showNotice('Finish time cannot be earlier than start time. Adjusted automatically.'); } week.rows[index]=row; if(field==='start' && value && !silent){ const computed=computeWeek(week); const proposed=computed.rows[index].proposedFinish; if(proposed) showNotice(`${row.day}: proposed finish ${proposed}${index===4 ? ' (Friday adjusted for weekly balance)' : ''}.`); } if(field==='finish' && value && silent){ celebrateClockOut(); showNotice(`${row.day}: clocked out at ${value} (rounded to ${state.settings.intervalMinutes} minutes).`); } else if(field==='start' && value && silent){ showNotice(`${row.day}: clocked in at ${value} (rounded to ${state.settings.intervalMinutes} minutes).`); } render(); }
+  function roundToQuarterMinutes(date){ const total=date.getHours()*60 + date.getMinutes(); const interval=Number(state.settings.intervalMinutes); const start=timeToMinutes(state.settings.workdayStart); const end=timeToMinutes(state.settings.workdayEnd); return Math.max(start, Math.min(end, Math.round(total/interval)*interval)); }
+  function clockNow(index,field){ updateRow(index,field,minutesToTime(roundToQuarterMinutes(new Date())),true); }
+  function clearDay(index){ const week=state.weeks[state.currentWeek]; if(!week || !week.rows[index]) return; week.rows[index]={ ...week.rows[index], status:'Work', start:'', finish:'', notes:'', lunchMinutes:null }; render(); }
+  function resetAll(){ if(!window.confirm('Reset all saved timesheet data?')) return; localStorage.removeItem(STORAGE_KEY); state=initialState(); render(); openWelcomeIfNeeded(); }
+
+  function csvEscape(value){ const s=String(value ?? ''); const needsWrap=/[",\n]/.test(s); const escaped=s.replace(/"/g,'""'); return needsWrap ? `"${escaped}"` : escaped; }
+  function exportWeekCSV(){ const current=computeWeek(state.weeks[state.currentWeek]); const allWeeks=computedWeeks(); const carryIn=allWeeks.slice(0,state.currentWeek).reduce((sum,w)=>sum+w.weekBalance,0); const carryOut=carryIn+current.weekBalance; const totalBalance=allWeeks.reduce((sum,w)=>sum+w.weekBalance,0); const lines=[[ 'Day','Date','Status','Start','Lunch (mins)','Finish','Proposed finish','Target worked (hrs)','Worked (hrs)','Daily +/- (hrs)','Notes' ].map(csvEscape).join(',')]; current.rows.forEach(row=>{ lines.push([row.day,row.date,row.status,row.start,String(rowLunch(row)),row.finish,row.proposedFinish,row.targetWorked.toFixed(2),row.worked.toFixed(2),row.delta.toFixed(2),row.notes || ''].map(csvEscape).join(',')); }); lines.push(''); lines.push(`${csvEscape('Weekly balance (hrs)')},${current.weekBalance.toFixed(2)}`); lines.push(`${csvEscape('Carry-in (hrs)')},${carryIn.toFixed(2)}`); lines.push(`${csvEscape('Carry-out (hrs)')},${carryOut.toFixed(2)}`); lines.push(`${csvEscape('Total balance (hrs)')},${totalBalance.toFixed(2)}`); lines.push(`${csvEscape('Friday target worked (hrs)')},${current.fridayTargetWorked.toFixed(2)}`); downloadBlob(new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8'}),`timesheet_week_${state.currentWeek+1}.csv`); }
+  function exportWeekExcel(){ const current=computeWeek(state.weeks[state.currentWeek]); const allWeeks=computedWeeks(); const carryIn=allWeeks.slice(0,state.currentWeek).reduce((sum,w)=>sum+w.weekBalance,0); const carryOut=carryIn+current.weekBalance; const totalBalance=allWeeks.reduce((sum,w)=>sum+w.weekBalance,0); const rowsHtml=current.rows.map(row=>`\n<tr><td>${row.day}</td><td>${row.date}</td><td>${row.status}</td><td>${row.start || ''}</td><td>${rowLunch(row)}</td><td>${row.finish || ''}</td><td>${row.proposedFinish || ''}</td><td>${row.targetWorked.toFixed(2)}</td><td>${row.worked.toFixed(2)}</td><td>${row.delta.toFixed(2)}</td><td>${(row.notes || '').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</td></tr>`).join(''); const html=`\n<html><head><meta charset="utf-8"></head><body><h2>${els.title.textContent}</h2><p>${els.weekCaption.textContent}</p><table border="1"><thead><tr><th>Day</th><th>Date</th><th>Status</th><th>Start</th><th>Lunch (mins)</th><th>Finish</th><th>Proposed finish</th><th>Target worked (hrs)</th><th>Worked (hrs)</th><th>Daily +/- (hrs)</th><th>Notes</th></tr></thead><tbody>${rowsHtml}</tbody></table><br><table border="1"><tbody><tr><td>Weekly balance (hrs)</td><td>${current.weekBalance.toFixed(2)}</td></tr><tr><td>Carry-in (hrs)</td><td>${carryIn.toFixed(2)}</td></tr><tr><td>Carry-out (hrs)</td><td>${carryOut.toFixed(2)}</td></tr><tr><td>Total balance (hrs)</td><td>${totalBalance.toFixed(2)}</td></tr><tr><td>Friday target worked (hrs)</td><td>${current.fridayTargetWorked.toFixed(2)}</td></tr></tbody></table></body></html>`; downloadBlob(new Blob([html],{type:'application/vnd.ms-excel;charset=utf-8'}),`timesheet_week_${state.currentWeek+1}.xls`); }
+  function downloadBlob(blob,filename){ const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }
+
+  function exportBackup(){ const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json;charset=utf-8'}); downloadBlob(blob, 'timesheet_backup.json'); }
+  function importBackup(file){ const reader = new FileReader(); reader.onload = () => { try{ const parsed = JSON.parse(reader.result); state = migrateState(parsed); saveState(); render(); showNotice('Backup imported successfully.'); }catch(err){ showNotice('Could not import backup JSON.'); } }; reader.readAsText(file); }
+
+  function openSettings(){ const s=state.settings; els.nameInput.value=s.name || ''; els.dailyHoursInput.value=String(s.dailyHours); els.lunchInput.value=String(s.lunchMinutes); els.lunchPreset1Input.value=String(s.lunchPresets[0]); els.lunchPreset2Input.value=String(s.lunchPresets[1]); els.lunchPreset3Input.value=String(s.lunchPresets[2]); els.workdayStartInput.value=s.workdayStart; els.workdayEndInput.value=s.workdayEnd; els.intervalInput.value=String(s.intervalMinutes); sortTimes(s.quickStartTimes).forEach((time,index)=>{ els.quickInputs[index].value=time || ''; }); els.fridayThresholdInput.value=String(s.fridayThreshold); els.densityInput.value=s.density; els.fontScaleInput.value=String(s.fontScale); els.contrastInput.value=s.contrast; els.tileCountInput.value=String(s.tileCount); els.showJokesInput.value=String(s.showJokes); els.helpOpenInput.value=String(s.helpOpen); els.simpleModeInput.value=String(s.simpleMode); els.autoJumpInput.value=String(s.autoJumpToCurrentWeek); els.rememberCurrentInput.value=String(s.rememberCurrentWeek); els.celebrationInput.value=String(s.celebration); els.settingsModal.classList.add('show'); els.settingsModal.setAttribute('aria-hidden','false'); }
+  function closeSettings(){ els.settingsModal.classList.remove('show'); els.settingsModal.setAttribute('aria-hidden','true'); }
+  function saveSettings(){ const start=els.workdayStartInput.value || DEFAULT_SETTINGS.workdayStart; const end=els.workdayEndInput.value || DEFAULT_SETTINGS.workdayEnd; if(timeToMinutes(end) <= timeToMinutes(start)){ showNotice('Latest time must be later than earliest time.'); return; } const quicks=sortTimes(els.quickInputs.map((input,index)=>input.value || DEFAULT_SETTINGS.quickStartTimes[index])).filter(Boolean).slice(0,4); state.settings = mergeSettings({ name: els.nameInput.value.trim(), dailyHours: Number(els.dailyHoursInput.value)||DEFAULT_SETTINGS.dailyHours, lunchMinutes: Number(els.lunchInput.value)||DEFAULT_SETTINGS.lunchMinutes, lunchPresets:[Number(els.lunchPreset1Input.value)||0, Number(els.lunchPreset2Input.value)||30, Number(els.lunchPreset3Input.value)||60], workdayStart:start, workdayEnd:end, intervalMinutes:Number(els.intervalInput.value)||15, quickStartTimes:quicks, fridayThreshold:Number(els.fridayThresholdInput.value)||DEFAULT_SETTINGS.fridayThreshold, density:els.densityInput.value, fontScale:Number(els.fontScaleInput.value), contrast:els.contrastInput.value, tileCount:Number(els.tileCountInput.value), showJokes:els.showJokesInput.value, helpOpen:els.helpOpenInput.value, simpleMode:els.simpleModeInput.value, autoJumpToCurrentWeek:els.autoJumpInput.value, rememberCurrentWeek:els.rememberCurrentInput.value, celebration:els.celebrationInput.value }); closeSettings(); render(); }
+  function openWelcomeIfNeeded(){ if(state.settings.name && state.settings.name.trim()) return; els.welcomeNameInput.value=''; els.welcomeModal.classList.add('show'); els.welcomeModal.setAttribute('aria-hidden','false'); }
+  function saveWelcome(){ const name=els.welcomeNameInput.value.trim(); if(!name){ showNotice('Please enter your name so the page heading can be personalised.'); return; } state.settings.name=name; els.welcomeModal.classList.remove('show'); els.welcomeModal.setAttribute('aria-hidden','true'); render(); }
+
+  document.getElementById('todayWeekBtn').addEventListener('click', ()=>{ syncToCurrentWeek(true); render(); });
+  document.getElementById('prevWeekBtn').addEventListener('click', previousWeek);
+  document.getElementById('nextWeekBtn').addEventListener('click', nextWeek);
+  document.getElementById('printBtn').addEventListener('click', ()=>window.print());
+  document.getElementById('settingsBtn').addEventListener('click', openSettings);
+  document.getElementById('closeSettingsBtn').addEventListener('click', closeSettings);
+  document.getElementById('saveSettingsBtn').addEventListener('click', saveSettings);
+  document.getElementById('exportCsvBtn').addEventListener('click', exportWeekCSV);
+  document.getElementById('exportXlsBtn').addEventListener('click', exportWeekExcel);
+  document.getElementById('resetCornerBtn').addEventListener('click', resetAll);
+  document.getElementById('welcomeSaveBtn').addEventListener('click', saveWelcome);
+  document.getElementById('newJokeBtn').addEventListener('click', ()=>nextUniqueJoke(true));
+  els.weekSelect.addEventListener('change',(e)=>{ state.currentWeek=Number(e.target.value); render(); });
+  els.settingsModal.addEventListener('click',(e)=>{ if(e.target===els.settingsModal) closeSettings(); });
+  els.modeSwitchBtn.addEventListener('click', ()=>{ state.settings.simpleMode = !state.settings.simpleMode; render(); });
+  els.exportBackupBtn.addEventListener('click', exportBackup);
+  els.importBackupBtn.addEventListener('click', ()=>els.importBackupFile.click());
+  els.importBackupFile.addEventListener('change', (e)=>{ const file = e.target.files && e.target.files[0]; if(file) importBackup(file); e.target.value=''; });
+  window.addEventListener('resize', applyVisualSettings);
+
+  syncToCurrentWeek(true);
+  render();
+  openWelcomeIfNeeded();
+  setInterval(()=>updateCurrentTime(computeWeek(state.weeks[state.currentWeek])),1000);
+})();
+</script>
+</body>
+</html>
