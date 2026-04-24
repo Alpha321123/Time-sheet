@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flexible Work Timesheet</title>
+  <meta name="description" content="Fixed download of flexible work timesheet with improved layout, daily joke, notes, settings, print summary, and scientist-inspired styling." />
+  <style>
+    :root {
+      --bg-1: #fff8f1;
+      --bg-2: #fff1f2;
+      --bg-3: #f0fdf4;
+      --bg-4: #eff6ff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: rgba(148,163,184,0.20);
+      --card: rgba(255,255,255,0.88);
+      --shadow-xl: 0 24px 56px rgba(31,41,55,0.12);
+      --shadow-lg: 0 14px 32px rgba(31,41,55,0.10);
+      --primary: #7c3aed;
+      --primary-hover: #6d28d9;
+      --teal: #0f766e;
+      --teal-hover: #115e59;
+      --navy: #1d3557;
+      --navy-hover: #163047;
+      --rose: #e11d48;
+      --rose-hover: #be123c;
+      --positive: #047857;
+      --negative: #dc2626;
+      --warning-bg: #fff7ed;
+      --warning-border: #fdba74;
+      --warning-text: #9a3412;
+      --ring: rgba(124,58,237,0.18);
+      --radius-xl: 30px;
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+      --sticky-bg: rgba(255,255,255,0.96);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(251,191,36,0.16), transparent 22%),
+        radial-gradient(circle at top right, rgba(244,114,182,0.14), transparent 24%),
+        radial-gradient(circle at bottom left, rgba(20,184,166,0.15), transparent 24%),
+        radial-gradient(circle at bottom right, rgba(96,165,250,0.16), transparent 22%),
+        linear-gradient(135deg, var(--bg-1), var(--bg-2), var(--bg-3), var(--bg-4));
+      min-height: 100vh;
+      padding: 18px;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.12;
+      background-image:
+        radial-gradient(circle at 12% 16%, rgba(124,58,237,0.22) 0 2px, transparent 3px),
+        radial-gradient(circle at 18% 22%, rgba(16,185,129,0.18) 0 2px, transparent 3px),
+        radial-gradient(circle at 82% 14%, rgba(245,158,11,0.2) 0 2px, transparent 3px),
+        linear-gradient(115deg, transparent 48%, rgba(148,163,184,0.14) 49%, rgba(148,163,184,0.14) 51%, transparent 52%);
+      background-size: 220px 220px, 220px 220px, 220px 220px, 240px 240px;
+    }
+
+    .wrap { max-width: 1560px; margin: 0 auto; position: relative; }
+
+    .shell {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.55);
+      border-radius: var(--radius-xl);
+      background: linear-gradient(180deg, rgba(255,255,255,0.90), rgba(255,255,255,0.72));
+      backdrop-filter: blur(16px);
+      box-shadow: var(--shadow-xl);
+      padding: 22px;
+    }
+
+    .shell::before,
+    .shell::after {
+      content: "";
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      border-radius: 999px;
+      filter: blur(40px);
+      opacity: 0.20;
+      pointer-events: none;
+    }
+    .shell::before { top: -100px; right: -70px; background: #f9a8d4; }
+    .shell::after { bottom: -120px; left: -70px; background: #93c5fd; }
+
+    .reset-corner {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 5;
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      border: 1px solid rgba(225,29,72,0.28);
+      background: rgba(255,255,255,0.86);
+      color: var(--rose);
+      font-size: 0.95rem;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(225,29,72,0.10);
+    }
+    .reset-corner:hover { background: #fff1f2; }
+
+    .topbar {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 18px;
+      flex-wrap: wrap;
+      padding-right: 46px;
+    }
+
+    .title-wrap { display: grid; gap: 10px; max-width: 980px; }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 3vw, 3.2rem);
+      line-height: 1.04;
+      letter-spacing: -0.04em;
+    }
+
+    .subtitle, .joke {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.65;
+      max-width: 82ch;
+    }
+    .joke { font-style: italic; }
+
+    .actions, .toolbar, .card-actions, .quick-picks { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .btn {
+      border: 0;
+      border-radius: 14px;
+      padding: 11px 16px;
+      color: white;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease, background-color 0.12s ease;
+      box-shadow: 0 12px 22px rgba(31,41,55,0.12);
+      white-space: nowrap;
+    }
+    .btn:hover { transform: translateY(-1px); filter: saturate(1.05); }
+    .btn:active { transform: translateY(0); }
+    .btn-primary { background: linear-gradient(180deg, #8b5cf6, var(--primary)); }
+    .btn-primary:hover { background: linear-gradient(180deg, #7c3aed, var(--primary-hover)); }
+    .btn-teal { background: linear-gradient(180deg, #14b8a6, var(--teal)); }
+    .btn-teal:hover { background: linear-gradient(180deg, #0f988a, var(--teal-hover)); }
+    .btn-navy { background: linear-gradient(180deg, #274c77, var(--navy)); }
+    .btn-navy:hover { background: linear-gradient(180deg, #214063, var(--navy-hover)); }
+    .btn-soft {
+      background: #f8fafc;
+      color: #334155;
+      border: 1px solid #e2e8f0;
+      box-shadow: none;
+    }
+    .btn-soft:hover { background: #eef2f7; }
+    .btn-small { padding: 8px 12px; border-radius: 12px; font-size: 0.82rem; }
+    .btn-tiny { padding: 7px 10px; border-radius: 12px; font-size: 0.78rem; }
+
+    .stack { margin-top: 18px; display: grid; gap: 16px; }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .notice {
+      display: none;
+      border-radius: 18px;
+      padding: 13px 14px;
+      background: var(--warning-bg);
+      border: 1px solid var(--warning-border);
+      color: var(--warning-text);
+      font-weight: 700;
+      box-shadow: 0 10px 22px rgba(154,52,18,0.08);
+    }
+
+    .glass {
+      background: linear-gradient(180deg, rgba(255,255,255,0.90), rgba(255,255,255,0.78));
+      border: 1px solid rgba(255,255,255,0.58);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      backdrop-filter: blur(12px);
+    }
+
+    .toolbar {
+      padding: 16px;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .week-panel {
+      min-width: 300px;
+      display: grid;
+      gap: 8px;
+    }
+    .week-panel label, .mini-note, .week-caption, .help-title {
+      color: var(--muted);
+      font-weight: 800;
+    }
+    .week-caption { font-size: 0.94rem; }
+    .mini-note { font-size: 0.84rem; line-height: 1.5; }
+
+    .field, select, input[type="text"], input[type="time"], input[type="number"], textarea {
+      width: 100%;
+      appearance: none;
+      min-height: 44px;
+      padding: 11px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(148,163,184,0.34);
+      background: rgba(255,255,255,0.96);
+      color: var(--text);
+      font: inherit;
+      outline: none;
+    }
+    textarea { min-height: 88px; resize: vertical; }
+    .field:focus, select:focus, input:focus, textarea:focus {
+      border-color: rgba(124,58,237,0.48);
+      box-shadow: 0 0 0 4px rgba(124,58,237,0.18);
+    }
+    .field[disabled], select[disabled], input[disabled], textarea[disabled] { opacity: 0.56; cursor: not-allowed; }
+
+    .summary {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(4, minmax(150px, 1fr));
+      flex: 1;
+      min-width: 420px;
+    }
+
+    .tile {
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+      min-height: 96px;
+      padding: 14px 14px 15px;
+      border-radius: 20px;
+      border: 1px solid rgba(148,163,184,0.18);
+      background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92));
+    }
+    .tile::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 76px;
+      height: 76px;
+      background: radial-gradient(circle, rgba(124,58,237,0.11), transparent 62%);
+      pointer-events: none;
+    }
+    .tile-label {
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 800;
+      line-height: 1.2;
+      white-space: nowrap;
+      margin: 0;
+    }
+    .tile-value {
+      font-weight: 900;
+      font-size: clamp(0.96rem, 1.2vw, 1.08rem);
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      margin: 0;
+    }
+    .positive { color: var(--positive); }
+    .negative { color: var(--negative); }
+
+    .table-card { padding: 8px; overflow: auto; }
+    table {
+      width: 100%;
+      min-width: 1320px;
+      border-collapse: separate;
+      border-spacing: 0;
+      border-radius: 18px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.80);
+    }
+    thead th {
+      padding: 14px 12px;
+      text-align: left;
+      background: rgba(250,245,255,0.90);
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-weight: 900;
+      border-bottom: 1px solid rgba(148,163,184,0.18);
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+      z-index: 3;
+    }
+    tbody td {
+      padding: 12px;
+      border-bottom: 1px solid rgba(241,245,249,0.96);
+      vertical-align: top;
+      background: rgba(255,255,255,0.82);
+    }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr:hover td { background: rgba(250,250,255,0.76); }
+
+    .day-col { font-weight: 900; min-width: 94px; position: sticky; left: 0; background: var(--sticky-bg); z-index: 2; }
+    .date-col { color: var(--muted); font-size: 0.92rem; min-width: 120px; position: sticky; left: 94px; background: var(--sticky-bg); z-index: 2; }
+    .status-col { min-width: 170px; }
+    .start-col, .finish-col { min-width: 188px; }
+    .notes-col { min-width: 240px; }
+
+    .lunch-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #fef3c7, #fde68a);
+      color: #92400e;
+      font-weight: 800;
+      border: 1px solid rgba(245,158,11,0.22);
+      min-width: 90px;
+    }
+
+    .quick-picks { margin-top: 8px; }
+    .quick-picks .btn-soft { background: #fff7ed; border-color: #fed7aa; }
+
+    .clock-cell, .lunch-cell, .clear-cell { white-space: nowrap; }
+    .worked-cell, .delta-cell, .proposed-cell { font-weight: 800; white-space: nowrap; }
+    .proposed-cell small {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .notes-input { min-height: 90px; }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: #f8fafc;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+      font-weight: 800;
+      font-size: 0.8rem;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 18px;
+      padding: 16px;
+      display: grid;
+      gap: 14px;
+    }
+    .help-panel ol {
+      margin: 0;
+      padding-left: 20px;
+      display: grid;
+      gap: 12px;
+      color: var(--text);
+    }
+    .help-panel li { line-height: 1.55; font-size: 0.94rem; }
+    .help-panel strong { color: var(--navy); }
+    .help-tip {
+      border-radius: 16px;
+      padding: 12px 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(252,248,255,0.92));
+      border: 1px solid rgba(148,163,184,0.18);
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 0.9rem;
+    }
+
+    .mobile-list { display: none; gap: 12px; }
+    .card {
+      padding: 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(148,163,184,0.18);
+      background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92));
+      box-shadow: 0 8px 18px rgba(31,41,55,0.07);
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: baseline;
+    }
+    .card-day { font-weight: 900; }
+    .card-date { color: var(--muted); font-size: 0.92rem; }
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .card-clock {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+      align-items: center;
+    }
+    .card-bottom {
+      margin-top: 12px;
+      display: grid;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .footer {
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .help { margin: 0; color: var(--muted); font-size: 0.88rem; line-height: 1.65; }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.42);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 40;
+    }
+    .modal-backdrop.show { display: flex; }
+    .modal {
+      width: min(760px, 100%);
+      max-height: 90vh;
+      overflow: auto;
+      padding: 18px;
+      border-radius: 24px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.90));
+      border: 1px solid rgba(255,255,255,0.60);
+      box-shadow: var(--shadow-xl);
+    }
+    .modal h2 { margin: 0 0 6px; }
+    .modal p { color: var(--muted); line-height: 1.6; }
+    .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+    .modal-actions {
+      margin-top: 16px;
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+    .field-block { display: grid; gap: 8px; }
+    .field-block label { font-weight: 800; color: var(--muted); }
+
+    .print-header { display: none; }
+
+    #celebration {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 60;
+    }
+    .burst {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      opacity: 0;
+      animation: burst 1.8s ease-out forwards;
+      box-shadow: 0 0 12px currentColor;
+    }
+    .petal {
+      position: absolute;
+      font-size: 20px;
+      opacity: 0;
+      animation: floatAway 2.2s ease-out forwards;
+      text-shadow: 0 6px 10px rgba(31,41,55,0.12);
+    }
+    @keyframes burst {
+      0% { transform: translate(0, 0) scale(0.2); opacity: 1; }
+      80% { opacity: 0.92; }
+      100% { transform: translate(var(--x), var(--y)) scale(1.4); opacity: 0; }
+    }
+    @keyframes floatAway {
+      0% { transform: translate(0, 0) scale(0.8) rotate(0deg); opacity: 1; }
+      100% { transform: translate(var(--x), var(--y)) scale(1.4) rotate(var(--r)); opacity: 0; }
+    }
+
+    @media (max-width: 1400px) {
+      .summary { grid-template-columns: repeat(4, minmax(140px, 1fr)); }
+    }
+    @media (max-width: 1180px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; }
+    }
+    @media (max-width: 980px) {
+      .summary { grid-template-columns: repeat(3, minmax(140px, 1fr)); }
+    }
+    @media (max-width: 780px) {
+      body { padding: 10px; }
+      .shell { padding: 16px; border-radius: 22px; }
+      .toolbar { flex-direction: column; }
+      .summary { width: 100%; grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+      .table-card { display: none; }
+      .mobile-list { display: grid; }
+      .actions { width: 100%; }
+      .actions .btn { flex: 1 1 calc(50% - 10px); }
+      .footer { align-items: stretch; }
+      .modal-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 520px) {
+      .summary { grid-template-columns: 1fr; }
+      .actions .btn { flex-basis: 100%; }
+      .card-grid { grid-template-columns: 1fr; }
+      .topbar { padding-right: 0; }
+      .reset-corner { top: 12px; right: 12px; }
+    }
+
+    @media print {
+      body { background: white !important; padding: 0; }
+      body::before, .sidebar, .actions, .toolbar .mini-note, .toolbar select, .toolbar label, .reset-corner,
+      .mobile-list, .notice, .footer, .quick-picks, .clock-cell, .clear-cell, .modal-backdrop, .joke { display: none !important; }
+      .wrap, .shell, .glass, .table-card { box-shadow: none !important; border: 0 !important; background: white !important; }
+      .shell { padding: 0 !important; }
+      .print-header { display: block; margin-bottom: 18px; }
+      .layout { display: block; }
+      .table-card { display: block !important; padding: 0 !important; overflow: visible !important; }
+      table { min-width: 0 !important; width: 100% !important; }
+      thead th, tbody td { border-color: #d1d5db !important; }
+      .summary { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .tile { border: 1px solid #d1d5db !important; }
+      .day-col, .date-col { position: static !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="celebration"></div>
+
+  <div class="wrap">
+    <section class="shell">
+      <button id="resetCornerBtn" class="reset-corner" title="Reset all saved data">↺</button>
+
+      <div class="topbar">
+        <div class="title-wrap">
+          <h1 id="pageTitle">Flexible Work Timesheet</h1>
+          <p class="subtitle">Where pipettes meet punctuality, and even your lunch break behaves like a controlled experiment.</p>
+          <p id="jokeOfDay" class="joke"></p>
+        </div>
+
+        <div class="actions">
+          <button id="prevWeekBtn" class="btn btn-navy">← Previous</button>
+          <button id="nextWeekBtn" class="btn btn-teal">Next Week</button>
+          <button id="printBtn" class="btn btn-soft">Print summary</button>
+          <button id="settingsBtn" class="btn btn-primary">Settings</button>
+          <button id="exportCsvBtn" class="btn btn-navy">Export CSV</button>
+          <button id="exportXlsBtn" class="btn btn-primary">Export Excel</button>
+        </div>
+      </div>
+
+      <div class="stack">
+        <div id="notice" class="notice"></div>
+
+        <div class="layout">
+          <div class="main-col">
+            <div class="glass toolbar">
+              <div class="week-panel">
+                <label for="weekSelect">Choose week</label>
+                <select id="weekSelect" class="field"></select>
+                <div id="weekCaption" class="week-caption"></div>
+                <div class="mini-note">Friday uses your Monday–Thursday hours to suggest whether it will be a short day or a long day.</div>
+              </div>
+
+              <div class="summary">
+                <div class="tile"><div class="tile-label">Current time</div><div id="currentTime" class="tile-value">--:--</div></div>
+                <div class="tile"><div class="tile-label">Today remaining</div><div id="remainingToday" class="tile-value">Set start</div></div>
+                <div class="tile"><div class="tile-label">Friday plan</div><div id="fridayPlan" class="tile-value">Waiting…</div></div>
+                <div class="tile"><div class="tile-label">Carry-in</div><div id="carryIn" class="tile-value positive">+0.00h</div></div>
+                <div class="tile"><div class="tile-label">This week</div><div id="weekBalance" class="tile-value positive">+0.00h</div></div>
+                <div class="tile"><div class="tile-label">Carry-out</div><div id="carryOut" class="tile-value positive">+0.00h</div></div>
+                <div class="tile"><div class="tile-label">Total balance</div><div id="totalBalance" class="tile-value positive">+0.00h</div></div>
+                <div class="tile"><div class="tile-label">Friday target work</div><div id="fridayTarget" class="tile-value positive">7.25h</div></div>
+              </div>
+            </div>
+
+            <div class="print-header">
+              <h2 id="printTitle">Flexible Work Timesheet</h2>
+              <p id="printWeek"></p>
+            </div>
+
+            <div class="glass table-card">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Day</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Start</th>
+                    <th>Lunch</th>
+                    <th>Finish</th>
+                    <th>Clock</th>
+                    <th>Proposed finish</th>
+                    <th>Worked</th>
+                    <th>Daily +/-</th>
+                    <th>Notes</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+              </table>
+            </div>
+
+            <div id="mobileList" class="mobile-list"></div>
+
+            <div class="glass footer">
+              <p class="help">Use <strong>Settings</strong> to change lunch minutes, your name, and your quick start buttons. Non-working statuses automatically change that day’s target to zero.</p>
+            </div>
+          </div>
+
+          <aside class="glass sidebar help-panel">
+            <div class="help-title">How to use</div>
+            <ol>
+              <li><strong>Step 1:</strong> Choose your week at the top, or move with <em>Previous</em> and <em>Next Week</em>.</li>
+              <li><strong>Step 2:</strong> For each day, pick a <em>Status</em>. Use <em>Work</em> for normal days, or choose <em>Leave</em>, <em>Public holiday</em>, or <em>Don’t want to work</em>.</li>
+              <li><strong>Step 3:</strong> Set your <em>Start</em> time or use the quick buttons / <em>Clock in</em>. The tool immediately calculates your <em>Proposed finish</em>.</li>
+              <li><strong>Step 4:</strong> Lunch is shown clearly between start and finish. You can change the lunch minutes in <em>Settings</em>; the default is 30 minutes.</li>
+              <li><strong>Step 5:</strong> Add any daily notes you want. Use <em>Clear</em> to wipe one day without touching the rest of the week.</li>
+              <li><strong>Step 6:</strong> On Friday, watch the <em>Friday plan</em> and <em>Friday target work</em> tiles. They tell you whether Friday needs to be short, normal, or long to avoid underwork or overwork.</li>
+            </ol>
+            <div class="help-tip"><strong>Tip:</strong> The live <em>Current time</em> and <em>Today remaining</em> tiles help you judge your day at a glance.</div>
+            <div class="help-tip"><strong>Print:</strong> Use <em>Print summary</em> for a clean weekly printout. Controls and instructions disappear automatically in print view.</div>
+          </aside>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div id="settingsModal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal">
+      <h2>Settings</h2>
+      <p>Personalise your timesheet here. Change your name, lunch duration, and the quick start buttons you use most often.</p>
+      <div class="modal-grid">
+        <div class="field-block">
+          <label for="nameInput">Your name</label>
+          <input id="nameInput" type="text" maxlength="60" placeholder="Enter your name" />
+        </div>
+        <div class="field-block">
+          <label for="lunchInput">Lunch minutes</label>
+          <input id="lunchInput" type="number" min="0" max="120" step="5" value="30" />
+        </div>
+        <div class="field-block"><label for="quick1">Quick start button 1</label><input id="quick1" type="time" step="900" /></div>
+        <div class="field-block"><label for="quick2">Quick start button 2</label><input id="quick2" type="time" step="900" /></div>
+        <div class="field-block"><label for="quick3">Quick start button 3</label><input id="quick3" type="time" step="900" /></div>
+        <div class="field-block"><label for="quick4">Quick start button 4</label><input id="quick4" type="time" step="900" /></div>
+      </div>
+      <div class="modal-actions">
+        <button id="closeSettingsBtn" class="btn btn-soft">Close</button>
+        <button id="saveSettingsBtn" class="btn btn-primary">Save settings</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="welcomeModal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal">
+      <h2>Welcome to your timesheet</h2>
+      <p>Before we begin, tell me what name should appear in the heading. You can always change it later in <em>Settings</em>.</p>
+      <div class="field-block" style="margin-top: 14px;">
+        <label for="welcomeNameInput">Your name</label>
+        <input id="welcomeNameInput" type="text" maxlength="60" placeholder="Enter your name" />
+      </div>
+      <div class="modal-actions">
+        <button id="welcomeSaveBtn" class="btn btn-primary">Start my timesheet</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const DAILY_HOURS = 7.25;
+      const STORAGE_KEY = 'flex_timesheet_html_v6_fixed';
+      const START_MINUTES = 7 * 60;
+      const END_MINUTES = 19 * 60;
+      const INTERVAL = 15;
+      const DAY_LABELS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+      const DEFAULT_SETTINGS = { name: '', lunchMinutes: 30, quickStartTimes: ['07:30', '08:00', '08:30', '09:00'] };
+      const STATUS_OPTIONS = ['Work', 'Leave', 'Public holiday', "Don't want to work"];
+      const JOKES = [
+        'Why did the biologist break up with the physicist? Too many constants.',
+        'I tried to make a chemistry joke… but there was no reaction.',
+        'A statistician drowned crossing a river that was only one metre deep on average.',
+        'Why do scientists trust atoms? Because they make up everything.',
+        'My lab notebook and I are in a stable relationship. Mostly observations.'
+      ];
+
+      const els = {
+        title: document.getElementById('pageTitle'),
+        joke: document.getElementById('jokeOfDay'),
+        notice: document.getElementById('notice'),
+        weekSelect: document.getElementById('weekSelect'),
+        weekCaption: document.getElementById('weekCaption'),
+        currentTime: document.getElementById('currentTime'),
+        remainingToday: document.getElementById('remainingToday'),
+        fridayPlan: document.getElementById('fridayPlan'),
+        carryIn: document.getElementById('carryIn'),
+        weekBalance: document.getElementById('weekBalance'),
+        carryOut: document.getElementById('carryOut'),
+        totalBalance: document.getElementById('totalBalance'),
+        fridayTarget: document.getElementById('fridayTarget'),
+        tableBody: document.getElementById('tableBody'),
+        mobileList: document.getElementById('mobileList'),
+        printTitle: document.getElementById('printTitle'),
+        printWeek: document.getElementById('printWeek'),
+        settingsModal: document.getElementById('settingsModal'),
+        welcomeModal: document.getElementById('welcomeModal'),
+        nameInput: document.getElementById('nameInput'),
+        lunchInput: document.getElementById('lunchInput'),
+        quickInputs: [document.getElementById('quick1'), document.getElementById('quick2'), document.getElementById('quick3'), document.getElementById('quick4')],
+        welcomeNameInput: document.getElementById('welcomeNameInput'),
+        celebration: document.getElementById('celebration')
+      };
+
+      function isoToDate(iso) { return new Date(iso + 'T00:00:00'); }
+      function dateToISO(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      }
+      function addDays(date, days) { const copy = new Date(date.getFullYear(), date.getMonth(), date.getDate()); copy.setDate(copy.getDate() + days); return copy; }
+      function startOfWeekMonday(date) { const copy = new Date(date.getFullYear(), date.getMonth(), date.getDate()); const day = copy.getDay(); copy.setDate(copy.getDate() + (day === 0 ? -6 : 1 - day)); return copy; }
+      function currentWeekMondayISO() { return dateToISO(startOfWeekMonday(new Date())); }
+      function formatDatePretty(iso) { return isoToDate(iso).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }); }
+      function formatDateLong(iso) { return isoToDate(iso).toLocaleDateString(undefined, { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }); }
+
+      function createWeek(mondayISO) {
+        const monday = isoToDate(mondayISO);
+        return { monday: mondayISO, rows: DAY_LABELS.map((label, index) => ({ day: label, date: dateToISO(addDays(monday, index)), status: 'Work', start: '', finish: '', notes: '' })) };
+      }
+      function initialState() { return { settings: { ...DEFAULT_SETTINGS }, weeks: [createWeek(currentWeekMondayISO())], currentWeek: 0 }; }
+
+      function timeToMinutes(value) {
+        if (!value) return null;
+        const parts = value.split(':');
+        if (parts.length !== 2) return null;
+        const h = Number(parts[0]);
+        const m = Number(parts[1]);
+        if (Number.isNaN(h) || Number.isNaN(m)) return null;
+        return h * 60 + m;
+      }
+      function minutesToTime(minutes) {
+        const safe = Math.max(START_MINUTES, Math.min(END_MINUTES, minutes));
+        const h = String(Math.floor(safe / 60)).padStart(2, '0');
+        const m = String(safe % 60).padStart(2, '0');
+        return `${h}:${m}`;
+      }
+      function validTimeOrDefault(value, fallback) {
+        if (!value) return fallback;
+        const minutes = timeToMinutes(value);
+        if (minutes == null || minutes < START_MINUTES || minutes > END_MINUTES || minutes % INTERVAL !== 0) return fallback;
+        return value;
+      }
+      function roundToQuarterMinutes(date) {
+        const total = date.getHours() * 60 + date.getMinutes();
+        return Math.max(START_MINUTES, Math.min(END_MINUTES, Math.round(total / INTERVAL) * INTERVAL));
+      }
+      function formatHours(n) { return `${n >= 0 ? '+' : ''}${n.toFixed(2)}h`; }
+      function valueClass(n) { return n < 0 ? 'negative' : 'positive'; }
+      function isWorkStatus(status) { return status === 'Work'; }
+      function lunchHours() { return (Number(state.settings.lunchMinutes) || 0) / 60; }
+      function weekTargetForRows(rows) { return rows.reduce((sum, row) => sum + (isWorkStatus(row.status) ? DAILY_HOURS : 0), 0); }
+
+      function migrateState(parsed) {
+        if (!parsed || !Array.isArray(parsed.weeks) || parsed.weeks.length === 0) return initialState();
+        const settings = {
+          name: parsed.settings && typeof parsed.settings.name === 'string' ? parsed.settings.name : '',
+          lunchMinutes: parsed.settings && Number(parsed.settings.lunchMinutes) >= 0 ? Number(parsed.settings.lunchMinutes) : 30,
+          quickStartTimes: Array.isArray(parsed.settings && parsed.settings.quickStartTimes)
+            ? parsed.settings.quickStartTimes.slice(0, 4).map((t, i) => validTimeOrDefault(t, DEFAULT_SETTINGS.quickStartTimes[i])).concat(DEFAULT_SETTINGS.quickStartTimes).slice(0, 4)
+            : [...DEFAULT_SETTINGS.quickStartTimes]
+        };
+        const weeks = parsed.weeks.map((week) => {
+          if (week && typeof week.monday === 'string' && Array.isArray(week.rows) && week.rows.length === 5) {
+            return {
+              monday: week.monday,
+              rows: week.rows.map((row, index) => ({
+                day: DAY_LABELS[index],
+                date: row.date || dateToISO(addDays(isoToDate(week.monday), index)),
+                status: STATUS_OPTIONS.includes(row.status) ? row.status : 'Work',
+                start: validTimeOrDefault(row.start, ''),
+                finish: validTimeOrDefault(row.finish, ''),
+                notes: typeof row.notes === 'string' ? row.notes : ''
+              }))
+            };
+          }
+          return createWeek(currentWeekMondayISO());
+        });
+        return { settings, weeks, currentWeek: Math.max(0, Math.min(parsed.currentWeek || 0, weeks.length - 1)) };
+      }
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return initialState();
+          return migrateState(JSON.parse(raw));
+        } catch (_) {
+          return initialState();
+        }
+      }
+
+      let state = loadState();
+
+      function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+      function showNotice(message) {
+        els.notice.textContent = message;
+        els.notice.style.display = 'block';
+        clearTimeout(showNotice._timer);
+        showNotice._timer = setTimeout(() => { els.notice.style.display = 'none'; }, 3600);
+      }
+
+      function setDailyJoke() {
+        const today = new Date();
+        const localDayNumber = Math.floor(new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime() / 86400000);
+        els.joke.textContent = `Joke of the day: ${JOKES[localDayNumber % JOKES.length]}`;
+      }
+
+      function updatePageTitle() {
+        const name = (state.settings.name || '').trim();
+        const title = name ? `${name}'s Flexible Work Timesheet` : 'Flexible Work Timesheet';
+        els.title.textContent = title;
+        els.printTitle.textContent = title;
+      }
+
+      function computeWeek(week) {
+        const lunch = lunchHours();
+        const weekTarget = weekTargetForRows(week.rows);
+        const mondayToThursdayWorked = week.rows.slice(0, 4).reduce((sum, row) => {
+          if (!isWorkStatus(row.status)) return sum;
+          const start = timeToMinutes(row.start);
+          const finish = timeToMinutes(row.finish);
+          const rawWorked = start != null && finish != null ? (finish - start) / 60 - lunch : 0;
+          return sum + Math.max(0, rawWorked);
+        }, 0);
+        const fridayTargetWorked = isWorkStatus(week.rows[4].status) ? Math.max(0, weekTarget - mondayToThursdayWorked) : 0;
+        const rows = week.rows.map((row, index) => {
+          const start = timeToMinutes(row.start);
+          const finish = timeToMinutes(row.finish);
+          const targetWorked = !isWorkStatus(row.status) ? 0 : (index === 4 ? fridayTargetWorked : DAILY_HOURS);
+          const rawWorked = isWorkStatus(row.status) && start != null && finish != null ? (finish - start) / 60 - lunch : 0;
+          const worked = Math.max(0, rawWorked);
+          const delta = worked - targetWorked;
+          const proposedFinishMinutes = isWorkStatus(row.status) && start != null ? Math.round((start + (targetWorked + lunch) * 60) / INTERVAL) * INTERVAL : null;
+          const proposedFinish = proposedFinishMinutes != null ? minutesToTime(proposedFinishMinutes) : '';
+          return { ...row, targetWorked, worked, delta, proposedFinishMinutes, proposedFinish };
+        });
+        const weekBalance = rows.reduce((sum, row) => sum + row.worked, 0) - weekTarget;
+        let fridayPlan = 'Waiting for more data';
+        if (!isWorkStatus(week.rows[4].status)) fridayPlan = 'Friday is off';
+        else if (fridayTargetWorked > DAILY_HOURS + 0.25) fridayPlan = `Long Friday likely: ${fridayTargetWorked.toFixed(2)}h work`;
+        else if (fridayTargetWorked < DAILY_HOURS - 0.25) fridayPlan = `Short Friday possible: ${fridayTargetWorked.toFixed(2)}h work`;
+        else fridayPlan = 'Friday looks normal';
+        return { rows, weekBalance, fridayTargetWorked, weekTarget, fridayPlan };
+      }
+      function computedWeeks() { return state.weeks.map(computeWeek); }
+
+      function updateCurrentTime(currentComputed) {
+        const now = new Date();
+        els.currentTime.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const todayISO = dateToISO(new Date());
+        const todayRow = currentComputed.rows.find((row) => row.date === todayISO);
+        if (!todayRow) { els.remainingToday.textContent = 'Not this week'; els.remainingToday.className = 'tile-value'; return; }
+        if (!isWorkStatus(todayRow.status)) { els.remainingToday.textContent = 'Off today'; els.remainingToday.className = 'tile-value'; return; }
+        if (!todayRow.start) { els.remainingToday.textContent = 'Set start'; els.remainingToday.className = 'tile-value'; return; }
+        if (todayRow.finish) { els.remainingToday.textContent = 'Done today'; els.remainingToday.className = 'tile-value positive'; return; }
+        if (todayRow.proposedFinishMinutes == null) { els.remainingToday.textContent = '--'; els.remainingToday.className = 'tile-value'; return; }
+        const nowMinutes = now.getHours() * 60 + now.getMinutes();
+        const diff = todayRow.proposedFinishMinutes - nowMinutes;
+        const abs = Math.abs(diff);
+        const hours = Math.floor(abs / 60);
+        const mins = String(abs % 60).padStart(2, '0');
+        if (diff >= 0) { els.remainingToday.textContent = `${hours}:${mins} left`; els.remainingToday.className = 'tile-value positive'; }
+        else { els.remainingToday.textContent = `Past target ${hours}:${mins}`; els.remainingToday.className = 'tile-value negative'; }
+      }
+
+      function updateSummary(carryIn, weekBalance, carryOut, totalBalance, fridayTargetWorked, fridayPlan) {
+        setSummary(els.carryIn, carryIn);
+        setSummary(els.weekBalance, weekBalance);
+        setSummary(els.carryOut, carryOut);
+        setSummary(els.totalBalance, totalBalance);
+        els.fridayTarget.textContent = `${fridayTargetWorked.toFixed(2)}h`;
+        els.fridayTarget.className = `tile-value ${fridayTargetWorked > DAILY_HOURS ? 'negative' : 'positive'}`;
+        els.fridayPlan.textContent = fridayPlan;
+        els.fridayPlan.className = `tile-value ${fridayTargetWorked > DAILY_HOURS + 0.25 ? 'negative' : 'positive'}`;
+      }
+      function setSummary(el, value) { el.textContent = formatHours(value); el.className = `tile-value ${valueClass(value)}`; }
+
+      function renderWeekOptions() {
+        els.weekSelect.innerHTML = '';
+        state.weeks.forEach((week, index) => {
+          const monday = isoToDate(week.monday);
+          const friday = addDays(monday, 4);
+          const option = document.createElement('option');
+          option.value = String(index);
+          option.textContent = `Week ${index + 1} · ${monday.toLocaleDateString(undefined, { day: '2-digit', month: 'short' })} – ${friday.toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}`;
+          if (index === state.currentWeek) option.selected = true;
+          els.weekSelect.appendChild(option);
+        });
+        const currentWeek = state.weeks[state.currentWeek];
+        const monday = isoToDate(currentWeek.monday);
+        const friday = addDays(monday, 4);
+        els.weekCaption.textContent = `Week commencing ${formatDateLong(currentWeek.monday)} · Friday ${friday.toLocaleDateString(undefined, { day: '2-digit', month: 'long' })}`;
+        els.printWeek.textContent = els.weekCaption.textContent;
+      }
+
+      function buildSelect(options, value, placeholder, onChange, disabled) {
+        const select = document.createElement('select');
+        select.className = 'field';
+        const empty = document.createElement('option');
+        empty.value = '';
+        empty.textContent = placeholder || '--';
+        select.appendChild(empty);
+        options.forEach((optValue) => {
+          const option = document.createElement('option');
+          option.value = optValue;
+          option.textContent = optValue;
+          if (optValue === value) option.selected = true;
+          select.appendChild(option);
+        });
+        if (disabled) select.disabled = true;
+        select.addEventListener('change', onChange);
+        return select;
+      }
+      function buildStatusSelect(value, onChange) { return buildSelect(STATUS_OPTIONS, value, 'Status', onChange, false); }
+      function buildTimeSelect(value, onChange, placeholder, disabled) { return buildSelect(timeOptions, value, placeholder, onChange, disabled); }
+
+      function quickButton(time, onClick, disabled) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-soft btn-tiny';
+        btn.textContent = time;
+        btn.disabled = !!disabled;
+        btn.addEventListener('click', onClick);
+        return btn;
+      }
+      function buildQuickPicks(index, disabled) {
+        const wrap = document.createElement('div');
+        wrap.className = 'quick-picks';
+        state.settings.quickStartTimes.forEach((time) => wrap.appendChild(quickButton(time, () => updateRow(index, 'start', time, false), disabled)));
+        return wrap;
+      }
+      function buildClockButtons(index, disabled) {
+        const wrap = document.createElement('div');
+        wrap.className = 'card-actions';
+        const inBtn = document.createElement('button');
+        inBtn.type = 'button'; inBtn.className = 'btn btn-soft btn-small'; inBtn.textContent = 'Clock in'; inBtn.disabled = !!disabled; inBtn.addEventListener('click', () => clockNow(index, 'start'));
+        const outBtn = document.createElement('button');
+        outBtn.type = 'button'; outBtn.className = 'btn btn-soft btn-small'; outBtn.textContent = 'Clock out'; outBtn.disabled = !!disabled; outBtn.addEventListener('click', () => clockNow(index, 'finish'));
+        wrap.append(inBtn, outBtn);
+        return wrap;
+      }
+
+      function renderTable(rows) {
+        els.tableBody.innerHTML = '';
+        rows.forEach((row, index) => {
+          const disabled = !isWorkStatus(row.status);
+          const tr = document.createElement('tr');
+          const dayTd = document.createElement('td'); dayTd.className = 'day-col'; dayTd.textContent = row.day;
+          const dateTd = document.createElement('td'); dateTd.className = 'date-col'; dateTd.textContent = formatDatePretty(row.date);
+          const statusTd = document.createElement('td'); statusTd.className = 'status-col'; statusTd.appendChild(buildStatusSelect(row.status, (e) => updateField(index, 'status', e.target.value)));
+          const startTd = document.createElement('td'); startTd.className = 'start-col'; startTd.appendChild(buildTimeSelect(row.start, (e) => updateRow(index, 'start', e.target.value, false), 'Start', disabled)); startTd.appendChild(buildQuickPicks(index, disabled));
+          const lunchTd = document.createElement('td'); lunchTd.className = 'lunch-cell'; const lunch = document.createElement('span'); lunch.className = 'lunch-badge'; lunch.textContent = `${state.settings.lunchMinutes} min`; lunchTd.appendChild(lunch);
+          const finishTd = document.createElement('td'); finishTd.className = 'finish-col'; finishTd.appendChild(buildTimeSelect(row.finish, (e) => updateRow(index, 'finish', e.target.value, false), 'Finish', disabled));
+          const clockTd = document.createElement('td'); clockTd.className = 'clock-cell'; clockTd.appendChild(buildClockButtons(index, disabled));
+          const proposedTd = document.createElement('td'); proposedTd.className = 'proposed-cell';
+          if (disabled) proposedTd.innerHTML = `<span class="status-badge">${row.status}</span><small>Target is zero for this day.</small>`;
+          else proposedTd.innerHTML = row.proposedFinish ? `${row.proposedFinish}<small>${index === 4 ? `Friday target ${row.targetWorked.toFixed(2)}h + ${state.settings.lunchMinutes}m lunch` : `7.25h + ${state.settings.lunchMinutes}m lunch`}</small>` : `<span style="color:#94a3b8;">—</span>`;
+          const workedTd = document.createElement('td'); workedTd.className = 'worked-cell'; workedTd.textContent = `${row.worked.toFixed(2)} hrs`;
+          const deltaTd = document.createElement('td'); deltaTd.className = `delta-cell ${valueClass(row.delta)}`; deltaTd.textContent = formatHours(row.delta);
+          const notesTd = document.createElement('td'); notesTd.className = 'notes-col'; const notes = document.createElement('textarea'); notes.className = 'notes-input'; notes.placeholder = 'Add notes for the day…'; notes.value = row.notes || ''; notes.addEventListener('change', (e) => updateField(index, 'notes', e.target.value)); notesTd.appendChild(notes);
+          const clearTd = document.createElement('td'); clearTd.className = 'clear-cell'; const clearBtn = document.createElement('button'); clearBtn.type = 'button'; clearBtn.className = 'btn btn-soft btn-small'; clearBtn.textContent = 'Clear'; clearBtn.addEventListener('click', () => clearDay(index)); clearTd.appendChild(clearBtn);
+          tr.append(dayTd, dateTd, statusTd, startTd, lunchTd, finishTd, clockTd, proposedTd, workedTd, deltaTd, notesTd, clearTd);
+          els.tableBody.appendChild(tr);
+        });
+      }
+
+      function renderMobile(rows) {
+        els.mobileList.innerHTML = '';
+        rows.forEach((row, index) => {
+          const disabled = !isWorkStatus(row.status);
+          const card = document.createElement('div'); card.className = 'card';
+          const top = document.createElement('div'); top.className = 'card-top';
+          const left = document.createElement('div'); left.innerHTML = `<div class="card-day">${row.day}</div><div class="card-date">${formatDatePretty(row.date)}</div>`;
+          const right = document.createElement('div'); right.innerHTML = `<span class="${valueClass(row.delta)}" style="font-weight:900;">${formatHours(row.delta)}</span>`;
+          top.append(left, right);
+          const status = buildStatusSelect(row.status, (e) => updateField(index, 'status', e.target.value));
+          const grid = document.createElement('div'); grid.className = 'card-grid';
+          grid.append(buildTimeSelect(row.start, (e) => updateRow(index, 'start', e.target.value, false), 'Start', disabled), buildTimeSelect(row.finish, (e) => updateRow(index, 'finish', e.target.value, false), 'Finish', disabled));
+          const quick = buildQuickPicks(index, disabled);
+          const clock = document.createElement('div'); clock.className = 'card-clock'; const lunchBadge = document.createElement('span'); lunchBadge.className = 'lunch-badge'; lunchBadge.textContent = `Lunch ${state.settings.lunchMinutes} min`; clock.append(buildClockButtons(index, disabled), lunchBadge);
+          const notes = document.createElement('textarea'); notes.placeholder = 'Add notes for the day…'; notes.value = row.notes || ''; notes.addEventListener('change', (e) => updateField(index, 'notes', e.target.value));
+          const clearBtn = document.createElement('button'); clearBtn.type = 'button'; clearBtn.className = 'btn btn-soft btn-small'; clearBtn.textContent = 'Clear day'; clearBtn.addEventListener('click', () => clearDay(index));
+          const bottom = document.createElement('div'); bottom.className = 'card-bottom';
+          bottom.innerHTML = `<div>${row.proposedFinish ? `Proposed finish: <strong>${row.proposedFinish}</strong>` : `<span style="color:#94a3b8;">No proposed finish yet</span>`}</div><div>${disabled ? `${row.status}: target is zero` : `${index === 4 ? `Friday target ${row.targetWorked.toFixed(2)}h + ${state.settings.lunchMinutes}m lunch` : `Daily target 7.25h + ${state.settings.lunchMinutes}m lunch`}`}</div><div>Worked: <strong>${row.worked.toFixed(2)}h</strong></div>`;
+          card.append(top, status, grid, quick, clock, notes, clearBtn, bottom);
+          els.mobileList.appendChild(card);
+        });
+      }
+
+      function celebrateClockOut() {
+        const symbols = ['✨', '🎆', '🎇', '🌸', '🌼', '🧪', '🔬'];
+        const colors = ['#f59e0b', '#ec4899', '#8b5cf6', '#14b8a6', '#60a5fa'];
+        const originX = window.innerWidth * (0.5 + (Math.random() * 0.2 - 0.1));
+        const originY = window.innerHeight * (0.45 + (Math.random() * 0.2 - 0.1));
+        for (let i = 0; i < 22; i++) {
+          const particle = document.createElement('span');
+          particle.className = 'burst';
+          particle.style.left = `${originX}px`;
+          particle.style.top = `${originY}px`;
+          particle.style.color = colors[i % colors.length];
+          const angle = (Math.PI * 2 * i) / 22;
+          const distance = 70 + Math.random() * 110;
+          particle.style.setProperty('--x', `${Math.cos(angle) * distance}px`);
+          particle.style.setProperty('--y', `${Math.sin(angle) * distance}px`);
+          els.celebration.appendChild(particle);
+          particle.addEventListener('animationend', () => particle.remove());
+        }
+        for (let i = 0; i < 16; i++) {
+          const petal = document.createElement('span');
+          petal.className = 'petal';
+          petal.textContent = symbols[i % symbols.length];
+          petal.style.left = `${originX + (Math.random() * 80 - 40)}px`;
+          petal.style.top = `${originY + (Math.random() * 40 - 20)}px`;
+          petal.style.setProperty('--x', `${Math.random() * 260 - 130}px`);
+          petal.style.setProperty('--y', `${120 + Math.random() * 160}px`);
+          petal.style.setProperty('--r', `${Math.random() * 240 - 120}deg`);
+          els.celebration.appendChild(petal);
+          petal.addEventListener('animationend', () => petal.remove());
+        }
+      }
+
+      function render() {
+        saveState();
+        updatePageTitle();
+        setDailyJoke();
+        const allWeeks = computedWeeks();
+        const current = allWeeks[state.currentWeek] || { rows: [], weekBalance: 0, fridayTargetWorked: DAILY_HOURS, fridayPlan: 'Waiting…' };
+        const carryIn = allWeeks.slice(0, state.currentWeek).reduce((sum, week) => sum + week.weekBalance, 0);
+        const carryOut = carryIn + current.weekBalance;
+        const totalBalance = allWeeks.reduce((sum, week) => sum + week.weekBalance, 0);
+        renderWeekOptions();
+        renderTable(current.rows);
+        renderMobile(current.rows);
+        updateSummary(carryIn, current.weekBalance, carryOut, totalBalance, current.fridayTargetWorked, current.fridayPlan);
+        updateCurrentTime(current);
+      }
+
+      function ensureWeekExists(index) {
+        while (state.weeks.length <= index) {
+          const lastMonday = isoToDate(state.weeks[state.weeks.length - 1].monday);
+          state.weeks.push(createWeek(dateToISO(addDays(lastMonday, 7))));
+        }
+      }
+      function previousWeek() { if (state.currentWeek > 0) { state.currentWeek -= 1; render(); } }
+      function nextWeek() { if (state.currentWeek === state.weeks.length - 1) ensureWeekExists(state.currentWeek + 1); state.currentWeek += 1; render(); }
+
+      function updateField(index, field, value) {
+        const week = state.weeks[state.currentWeek];
+        if (!week || !week.rows[index]) return;
+        const row = { ...week.rows[index], [field]: value };
+        if (field === 'status' && !isWorkStatus(value)) { row.start = ''; row.finish = ''; }
+        week.rows[index] = row;
+        render();
+      }
+
+      function updateRow(index, field, value, silent) {
+        const week = state.weeks[state.currentWeek];
+        if (!week || !week.rows[index]) return;
+        const row = { ...week.rows[index], [field]: value };
+        const start = timeToMinutes(row.start);
+        const finish = timeToMinutes(row.finish);
+        if (start != null && finish != null && finish < start) {
+          row.finish = row.start;
+          if (!silent) showNotice('Finish time cannot be earlier than start time. Adjusted automatically.');
+        }
+        week.rows[index] = row;
+        if (field === 'start' && value && !silent) {
+          const computed = computeWeek(week);
+          const proposed = computed.rows[index].proposedFinish;
+          if (proposed) showNotice(`${row.day}: proposed finish ${proposed}${index === 4 ? ' (Friday adjusted for weekly balance)' : ''}.`);
+        }
+        if (field === 'finish' && value && silent) {
+          celebrateClockOut();
+          showNotice(`${row.day}: clocked out at ${value} (rounded to 15 minutes).`);
+        } else if (field === 'start' && value && silent) {
+          showNotice(`${row.day}: clocked in at ${value} (rounded to 15 minutes).`);
+        }
+        render();
+      }
+      function clockNow(index, field) { updateRow(index, field, minutesToTime(roundToQuarterMinutes(new Date())), true); }
+      function clearDay(index) {
+        const week = state.weeks[state.currentWeek];
+        if (!week || !week.rows[index]) return;
+        week.rows[index] = { ...week.rows[index], status: 'Work', start: '', finish: '', notes: '' };
+        render();
+      }
+
+      function resetAll() {
+        if (!window.confirm('Reset all saved timesheet data?')) return;
+        localStorage.removeItem(STORAGE_KEY);
+        state = initialState();
+        render();
+        openWelcomeIfNeeded();
+      }
+
+      function csvEscape(value) {
+        const s = String(value ?? '');
+        const needsWrap = /[",\n]/.test(s);
+        const escaped = s.replace(/"/g, '""');
+        return needsWrap ? `"${escaped}"` : escaped;
+      }
+      function exportWeekCSV() {
+        const current = computeWeek(state.weeks[state.currentWeek]);
+        const allWeeks = computedWeeks();
+        const carryIn = allWeeks.slice(0, state.currentWeek).reduce((sum, w) => sum + w.weekBalance, 0);
+        const carryOut = carryIn + current.weekBalance;
+        const totalBalance = allWeeks.reduce((sum, w) => sum + w.weekBalance, 0);
+        const lines = [[ 'Day', 'Date', 'Status', 'Start', 'Lunch (mins)', 'Finish', 'Proposed finish', 'Target worked (hrs)', 'Worked (hrs)', 'Daily +/- (hrs)', 'Notes' ].map(csvEscape).join(',')];
+        current.rows.forEach((row) => {
+          lines.push([row.day, row.date, row.status, row.start, String(state.settings.lunchMinutes), row.finish, row.proposedFinish, row.targetWorked.toFixed(2), row.worked.toFixed(2), row.delta.toFixed(2), row.notes || ''].map(csvEscape).join(','));
+        });
+        lines.push('');
+        lines.push(`${csvEscape('Weekly balance (hrs)')},${current.weekBalance.toFixed(2)}`);
+        lines.push(`${csvEscape('Carry-in (hrs)')},${carryIn.toFixed(2)}`);
+        lines.push(`${csvEscape('Carry-out (hrs)')},${carryOut.toFixed(2)}`);
+        lines.push(`${csvEscape('Total balance (hrs)')},${totalBalance.toFixed(2)}`);
+        lines.push(`${csvEscape('Friday target worked (hrs)')},${current.fridayTargetWorked.toFixed(2)}`);
+        downloadBlob(new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' }), `timesheet_week_${state.currentWeek + 1}.csv`);
+      }
+      function exportWeekExcel() {
+        const current = computeWeek(state.weeks[state.currentWeek]);
+        const allWeeks = computedWeeks();
+        const carryIn = allWeeks.slice(0, state.currentWeek).reduce((sum, w) => sum + w.weekBalance, 0);
+        const carryOut = carryIn + current.weekBalance;
+        const totalBalance = allWeeks.reduce((sum, w) => sum + w.weekBalance, 0);
+        const rowsHtml = current.rows.map((row) => `\n<tr><td>${row.day}</td><td>${row.date}</td><td>${row.status}</td><td>${row.start || ''}</td><td>${state.settings.lunchMinutes}</td><td>${row.finish || ''}</td><td>${row.proposedFinish || ''}</td><td>${row.targetWorked.toFixed(2)}</td><td>${row.worked.toFixed(2)}</td><td>${row.delta.toFixed(2)}</td><td>${(row.notes || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</td></tr>`).join('');
+        const html = `\n<html><head><meta charset="utf-8"></head><body><h2>${els.title.textContent}</h2><p>${els.weekCaption.textContent}</p><table border="1"><thead><tr><th>Day</th><th>Date</th><th>Status</th><th>Start</th><th>Lunch (mins)</th><th>Finish</th><th>Proposed finish</th><th>Target worked (hrs)</th><th>Worked (hrs)</th><th>Daily +/- (hrs)</th><th>Notes</th></tr></thead><tbody>${rowsHtml}</tbody></table><br><table border="1"><tbody><tr><td>Weekly balance (hrs)</td><td>${current.weekBalance.toFixed(2)}</td></tr><tr><td>Carry-in (hrs)</td><td>${carryIn.toFixed(2)}</td></tr><tr><td>Carry-out (hrs)</td><td>${carryOut.toFixed(2)}</td></tr><tr><td>Total balance (hrs)</td><td>${totalBalance.toFixed(2)}</td></tr><tr><td>Friday target worked (hrs)</td><td>${current.fridayTargetWorked.toFixed(2)}</td></tr></tbody></table></body></html>`;
+        downloadBlob(new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' }), `timesheet_week_${state.currentWeek + 1}.xls`);
+      }
+      function downloadBlob(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      function openSettings() {
+        els.nameInput.value = state.settings.name || '';
+        els.lunchInput.value = String(state.settings.lunchMinutes || 30);
+        state.settings.quickStartTimes.forEach((time, index) => { els.quickInputs[index].value = time || ''; });
+        els.settingsModal.classList.add('show');
+        els.settingsModal.setAttribute('aria-hidden', 'false');
+      }
+      function closeSettings() {
+        els.settingsModal.classList.remove('show');
+        els.settingsModal.setAttribute('aria-hidden', 'true');
+      }
+      function saveSettings() {
+        const lunch = Math.max(0, Math.min(120, Number(els.lunchInput.value) || 30));
+        const quicks = els.quickInputs.map((input, index) => validTimeOrDefault(input.value, DEFAULT_SETTINGS.quickStartTimes[index]));
+        state.settings = { name: els.nameInput.value.trim(), lunchMinutes: lunch, quickStartTimes: quicks };
+        closeSettings();
+        render();
+      }
+      function openWelcomeIfNeeded() {
+        if (state.settings.name && state.settings.name.trim()) return;
+        els.welcomeNameInput.value = '';
+        els.welcomeModal.classList.add('show');
+        els.welcomeModal.setAttribute('aria-hidden', 'false');
+      }
+      function saveWelcome() {
+        const name = els.welcomeNameInput.value.trim();
+        if (!name) { showNotice('Please enter your name so the page heading can be personalised.'); return; }
+        state.settings.name = name;
+        els.welcomeModal.classList.remove('show');
+        els.welcomeModal.setAttribute('aria-hidden', 'true');
+        render();
+      }
+
+      document.getElementById('prevWeekBtn').addEventListener('click', previousWeek);
+      document.getElementById('nextWeekBtn').addEventListener('click', nextWeek);
+      document.getElementById('printBtn').addEventListener('click', () => window.print());
+      document.getElementById('settingsBtn').addEventListener('click', openSettings);
+      document.getElementById('closeSettingsBtn').addEventListener('click', closeSettings);
+      document.getElementById('saveSettingsBtn').addEventListener('click', saveSettings);
+      document.getElementById('exportCsvBtn').addEventListener('click', exportWeekCSV);
+      document.getElementById('exportXlsBtn').addEventListener('click', exportWeekExcel);
+      document.getElementById('resetCornerBtn').addEventListener('click', resetAll);
+      document.getElementById('welcomeSaveBtn').addEventListener('click', saveWelcome);
+      els.weekSelect.addEventListener('change', (e) => { state.currentWeek = Number(e.target.value); render(); });
+      els.settingsModal.addEventListener('click', (e) => { if (e.target === els.settingsModal) closeSettings(); });
+
+      render();
+      openWelcomeIfNeeded();
+      setInterval(() => updateCurrentTime(computeWeek(state.weeks[state.currentWeek])), 1000);
+    })();
+  </script>
+</body>
+</html>
