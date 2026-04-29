@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flexible Work Timesheet</title>
+  <meta name="description" content="Elegant flexible work timesheet with fixed lunch, live clock, remaining work time, Friday balancing, and export features." />
+  <style>
+    :root {
+      --bg-1: #fff8f1;
+      --bg-2: #fff1f2;
+      --bg-3: #f0fdf4;
+      --bg-4: #eff6ff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: rgba(148, 163, 184, 0.20);
+      --card: rgba(255, 255, 255, 0.82);
+      --card-strong: rgba(255, 255, 255, 0.94);
+      --shadow-xl: 0 24px 56px rgba(31, 41, 55, 0.12);
+      --shadow-lg: 0 12px 28px rgba(31, 41, 55, 0.10);
+      --primary: #7c3aed;
+      --primary-hover: #6d28d9;
+      --teal: #0f766e;
+      --teal-hover: #115e59;
+      --navy: #1d3557;
+      --navy-hover: #163047;
+      --rose: #e11d48;
+      --rose-hover: #be123c;
+      --positive: #047857;
+      --negative: #dc2626;
+      --warning-bg: #fff7ed;
+      --warning-border: #fdba74;
+      --warning-text: #9a3412;
+      --ring: rgba(124, 58, 237, 0.18);
+      --radius-xl: 30px;
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(251, 191, 36, 0.16), transparent 22%),
+        radial-gradient(circle at top right, rgba(244, 114, 182, 0.14), transparent 24%),
+        radial-gradient(circle at bottom left, rgba(20, 184, 166, 0.15), transparent 24%),
+        radial-gradient(circle at bottom right, rgba(96, 165, 250, 0.16), transparent 22%),
+        linear-gradient(135deg, var(--bg-1), var(--bg-2), var(--bg-3), var(--bg-4));
+      min-height: 100vh;
+      padding: 18px;
+    }
+
+    .wrap { max-width: 1380px; margin: 0 auto; }
+
+    .shell {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.55);
+      border-radius: var(--radius-xl);
+      background: linear-gradient(180deg, rgba(255,255,255,0.88), rgba(255,255,255,0.68));
+      backdrop-filter: blur(16px);
+      box-shadow: var(--shadow-xl);
+      padding: 22px;
+    }
+
+    .shell::before,
+    .shell::after {
+      content: "";
+      position: absolute;
+      width: 280px;
+      height: 280px;
+      border-radius: 999px;
+      filter: blur(36px);
+      opacity: 0.22;
+      pointer-events: none;
+    }
+    .shell::before { top: -90px; right: -60px; background: #f9a8d4; }
+    .shell::after { bottom: -110px; left: -60px; background: #93c5fd; }
+
+    .topbar {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .title-wrap {
+      display: grid;
+      gap: 10px;
+      max-width: 920px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.95rem, 3vw, 3.1rem);
+      line-height: 1.04;
+      letter-spacing: -0.04em;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.98rem;
+      line-height: 1.65;
+      max-width: 78ch;
+    }
+
+    .pill-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.72);
+      background: rgba(255,255,255,0.78);
+      color: #374151;
+      font-weight: 700;
+      font-size: 0.85rem;
+      box-shadow: 0 8px 18px rgba(31, 41, 55, 0.06);
+    }
+
+    .actions, .toolbar { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .btn {
+      border: 0;
+      border-radius: 14px;
+      padding: 11px 16px;
+      color: white;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease;
+      box-shadow: 0 12px 22px rgba(31, 41, 55, 0.12);
+      white-space: nowrap;
+    }
+    .btn:hover { transform: translateY(-1px); filter: saturate(1.05); }
+    .btn:active { transform: translateY(0); }
+    .btn-primary { background: linear-gradient(180deg, #8b5cf6, var(--primary)); }
+    .btn-primary:hover { background: linear-gradient(180deg, #7c3aed, var(--primary-hover)); }
+    .btn-teal { background: linear-gradient(180deg, #14b8a6, var(--teal)); }
+    .btn-teal:hover { background: linear-gradient(180deg, #0f988a, var(--teal-hover)); }
+    .btn-navy { background: linear-gradient(180deg, #274c77, var(--navy)); }
+    .btn-navy:hover { background: linear-gradient(180deg, #214063, var(--navy-hover)); }
+    .btn-rose { background: linear-gradient(180deg, #fb7185, var(--rose)); }
+    .btn-rose:hover { background: linear-gradient(180deg, #f43f5e, var(--rose-hover)); }
+    .btn-soft {
+      background: #f8fafc;
+      color: #334155;
+      border: 1px solid #e2e8f0;
+      box-shadow: none;
+    }
+    .btn-soft:hover { background: #eef2f7; }
+    .btn-small { padding: 9px 12px; border-radius: 12px; font-size: 0.84rem; }
+
+    .stack {
+      margin-top: 18px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .notice {
+      display: none;
+      border-radius: 18px;
+      padding: 13px 14px;
+      background: var(--warning-bg);
+      border: 1px solid var(--warning-border);
+      color: var(--warning-text);
+      font-weight: 700;
+      box-shadow: 0 10px 22px rgba(154, 52, 18, 0.08);
+    }
+
+    .glass {
+      background: linear-gradient(180deg, rgba(255,255,255,0.88), rgba(255,255,255,0.74));
+      border: 1px solid rgba(255,255,255,0.58);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      backdrop-filter: blur(12px);
+    }
+
+    .toolbar {
+      padding: 16px;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .week-panel {
+      min-width: 290px;
+      display: grid;
+      gap: 8px;
+    }
+    .week-panel label,
+    .mini-note,
+    .week-caption {
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .week-caption { font-size: 0.94rem; }
+    .mini-note { font-size: 0.84rem; line-height: 1.5; }
+
+    .field, select {
+      width: 100%;
+      appearance: none;
+      min-height: 44px;
+      padding: 11px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.34);
+      background: rgba(255,255,255,0.96);
+      color: var(--text);
+      font: inherit;
+      outline: none;
+    }
+    .field:focus, select:focus {
+      border-color: rgba(124, 58, 237, 0.48);
+      box-shadow: 0 0 0 4px var(--ring);
+    }
+
+    .summary {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      flex: 1;
+      min-width: 420px;
+    }
+
+    .tile {
+      position: relative;
+      overflow: hidden;
+      padding: 14px 14px 15px;
+      border-radius: 20px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(248,250,252,0.92));
+    }
+    .tile::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 76px;
+      height: 76px;
+      background: radial-gradient(circle, rgba(124,58,237,0.11), transparent 62%);
+      pointer-events: none;
+    }
+    .tile-label {
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .tile-value {
+      font-weight: 900;
+      font-size: 1.08rem;
+      letter-spacing: -0.02em;
+    }
+    .positive { color: var(--positive); }
+    .negative { color: var(--negative); }
+
+    .table-card { padding: 8px; overflow: auto; }
+    table {
+      width: 100%;
+      min-width: 1320px;
+      border-collapse: separate;
+      border-spacing: 0;
+      border-radius: 18px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.78);
+    }
+    thead th {
+      padding: 14px 12px;
+      text-align: left;
+      background: rgba(250, 245, 255, 0.86);
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 900;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+      white-space: nowrap;
+    }
+    tbody td {
+      padding: 12px;
+      border-bottom: 1px solid rgba(241,245,249,0.96);
+      vertical-align: middle;
+    }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr:hover td { background: rgba(250, 250, 255, 0.7); }
+
+    .day-col { font-weight: 900; }
+    .date-col { color: var(--muted); font-size: 0.92rem; }
+    .lunch-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #fef3c7, #fde68a);
+      color: #92400e;
+      font-weight: 800;
+      border: 1px solid rgba(245, 158, 11, 0.22);
+      min-width: 86px;
+    }
+    .clock-cell, .lunch-cell { white-space: nowrap; }
+    .worked-cell, .delta-cell, .proposed-cell { font-weight: 800; white-space: nowrap; }
+    .proposed-cell small {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .mobile-list { display: none; gap: 12px; }
+    .card {
+      padding: 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92));
+      box-shadow: 0 8px 18px rgba(31, 41, 55, 0.07);
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: baseline;
+    }
+    .card-day { font-weight: 900; }
+    .card-date { color: var(--muted); font-size: 0.92rem; }
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .card-clock {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .card-bottom {
+      margin-top: 12px;
+      display: grid;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .footer {
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .help {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.65;
+    }
+
+    @media (max-width: 1240px) {
+      .summary { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+    @media (max-width: 980px) {
+      .summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    @media (max-width: 780px) {
+      body { padding: 10px; }
+      .shell { padding: 16px; border-radius: 22px; }
+      .toolbar { flex-direction: column; }
+      .summary { width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .table-card { display: none; }
+      .mobile-list { display: grid; }
+      .actions { width: 100%; }
+      .actions .btn { flex: 1 1 calc(50% - 10px); }
+      .footer { align-items: stretch; }
+    }
+    @media (max-width: 520px) {
+      .summary { grid-template-columns: 1fr; }
+      .actions .btn { flex-basis: 100%; }
+      .card-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="shell">
+      <div class="topbar">
+        <div class="title-wrap">
+          <h1>Flexible Work Timesheet</h1>
+          <p class="subtitle">A happy, elegant, professional weekly timesheet. Monday–Friday is always ready, lunch is shown clearly as a fixed 30-minute break between start and finish, proposed finish updates the moment you enter a start time, and Friday automatically adjusts to balance your week.</p>
+          <div class="pill-row">
+            <span class="pill">⏱ 15-minute intervals</span>
+            <span class="pill">🥗 Lunch fixed at 30 min</span>
+            <span class="pill">🕒 Live clock + remaining time</span>
+            <span class="pill">📤 CSV + Excel export</span>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="prevWeekBtn" class="btn btn-navy">← Previous</button>
+          <button id="nextWeekBtn" class="btn btn-teal">Next Week</button>
+          <button id="exportCsvBtn" class="btn btn-navy">Export CSV</button>
+          <button id="exportXlsBtn" class="btn btn-primary">Export Excel</button>
+          <button id="resetBtn" class="btn btn-rose">Reset</button>
+        </div>
+      </div>
+
+      <div class="stack">
+        <div id="notice" class="notice"></div>
+
+        <div class="glass toolbar">
+          <div class="week-panel">
+            <label for="weekSelect">Choose week</label>
+            <select id="weekSelect" class="field"></select>
+            <div id="weekCaption" class="week-caption"></div>
+            <div class="mini-note">Friday proposed finish uses your Monday–Thursday hours so you avoid overwork or underwork across the whole week.</div>
+          </div>
+
+          <div class="summary">
+            <div class="tile">
+              <div class="tile-label">Current time</div>
+              <div id="currentTime" class="tile-value">--:--</div>
+            </div>
+            <div class="tile">
+              <div class="tile-label">Today remaining</div>
+              <div id="remainingToday" class="tile-value positive">Set start</div>
+            </div>
+            <div class="tile">
+              <div class="tile-label">Carry-in</div>
+              <div id="carryIn" class="tile-value positive">+0.00h</div>
+            </div>
+            <div class="tile">
+              <div class="tile-label">This week</div>
+              <div id="weekBalance" class="tile-value positive">+0.00h</div>
+            </div>
+            <div class="tile">
+              <div class="tile-label">Carry-out</div>
+              <div id="carryOut" class="tile-value positive">+0.00h</div>
+            </div>
+            <div class="tile">
+              <div class="tile-label">Total balance</div>
+              <div id="totalBalance" class="tile-value positive">+0.00h</div>
+            </div>
+            <div class="tile">
+              <div class="tile-label">Friday target work</div>
+              <div id="fridayTarget" class="tile-value positive">7.25h</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass table-card">
+          <table>
+            <thead>
+              <tr>
+                <th>Day</th>
+                <th>Date</th>
+                <th>Start</th>
+                <th>Lunch</th>
+                <th>Finish</th>
+                <th>Clock</th>
+                <th>Proposed finish</th>
+                <th>Worked</th>
+                <th>Daily +/-</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+
+        <div id="mobileList" class="mobile-list"></div>
+
+        <div class="glass footer">
+          <p class="help">Standard day 7.25h · Fixed lunch shown between start and finish · Finish cannot be earlier than start · Friday target adjusts to your running weekly balance · Clock in/out rounds to the nearest 15 minutes.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      const DAILY_HOURS = 7.25;
+      const WEEKLY_HOURS = DAILY_HOURS * 5;
+      const LUNCH_HOURS = 0.5;
+      const STORAGE_KEY = "flex_timesheet_html_v4";
+      const START_MINUTES = 7 * 60;
+      const END_MINUTES = 19 * 60;
+      const INTERVAL = 15;
+      const DAY_LABELS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+
+      const timeOptions = [];
+      for (let minutes = START_MINUTES; minutes <= END_MINUTES; minutes += INTERVAL) {
+        timeOptions.push(minutesToTime(minutes));
+      }
+
+      const els = {
+        notice: document.getElementById("notice"),
+        weekSelect: document.getElementById("weekSelect"),
+        weekCaption: document.getElementById("weekCaption"),
+        currentTime: document.getElementById("currentTime"),
+        remainingToday: document.getElementById("remainingToday"),
+        tableBody: document.getElementById("tableBody"),
+        mobileList: document.getElementById("mobileList"),
+        carryIn: document.getElementById("carryIn"),
+        weekBalance: document.getElementById("weekBalance"),
+        carryOut: document.getElementById("carryOut"),
+        totalBalance: document.getElementById("totalBalance"),
+        fridayTarget: document.getElementById("fridayTarget")
+      };
+
+      function isoToDate(iso) { return new Date(iso + "T00:00:00"); }
+      function dateToISO(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, "0");
+        const d = String(date.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+      }
+      function addDays(date, days) {
+        const copy = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        copy.setDate(copy.getDate() + days);
+        return copy;
+      }
+      function startOfWeekMonday(date) {
+        const copy = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        const day = copy.getDay();
+        const diff = day === 0 ? -6 : 1 - day;
+        copy.setDate(copy.getDate() + diff);
+        return copy;
+      }
+      function currentWeekMondayISO() { return dateToISO(startOfWeekMonday(new Date())); }
+      function formatDatePretty(iso) {
+        const date = isoToDate(iso);
+        return date.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
+      }
+
+      function createWeek(mondayISO) {
+        const monday = isoToDate(mondayISO);
+        return {
+          monday: mondayISO,
+          rows: DAY_LABELS.map((label, index) => ({
+            day: label,
+            date: dateToISO(addDays(monday, index)),
+            start: "",
+            finish: ""
+          }))
+        };
+      }
+
+      function initialState() {
+        return { weeks: [createWeek(currentWeekMondayISO())], currentWeek: 0 };
+      }
+
+      function migrateState(parsed) {
+        if (!parsed || !Array.isArray(parsed.weeks) || parsed.weeks.length === 0) return initialState();
+        const weeks = parsed.weeks.map((week) => {
+          if (week && typeof week.monday === "string" && Array.isArray(week.rows) && week.rows.length === 5) {
+            return {
+              monday: week.monday,
+              rows: week.rows.map((row, index) => ({
+                day: DAY_LABELS[index],
+                date: row.date || dateToISO(addDays(isoToDate(week.monday), index)),
+                start: row.start || "",
+                finish: row.finish || ""
+              }))
+            };
+          }
+          return createWeek(currentWeekMondayISO());
+        });
+        return { weeks, currentWeek: Math.max(0, Math.min(parsed.currentWeek || 0, weeks.length - 1)) };
+      }
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return initialState();
+          return migrateState(JSON.parse(raw));
+        } catch (_) {
+          return initialState();
+        }
+      }
+
+      let state = loadState();
+
+      function saveState() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      }
+
+      function showNotice(message) {
+        els.notice.textContent = message;
+        els.notice.style.display = "block";
+        clearTimeout(showNotice._timer);
+        showNotice._timer = setTimeout(() => { els.notice.style.display = "none"; }, 3400);
+      }
+
+      function timeToMinutes(value) {
+        if (!value) return null;
+        const parts = value.split(":");
+        if (parts.length !== 2) return null;
+        const h = Number(parts[0]);
+        const m = Number(parts[1]);
+        if (Number.isNaN(h) || Number.isNaN(m)) return null;
+        return h * 60 + m;
+      }
+
+      function minutesToTime(minutes) {
+        const safe = Math.max(START_MINUTES, Math.min(END_MINUTES, minutes));
+        const h = String(Math.floor(safe / 60)).padStart(2, "0");
+        const m = String(safe % 60).padStart(2, "0");
+        return `${h}:${m}`;
+      }
+
+      function roundToQuarterMinutes(date) {
+        const total = date.getHours() * 60 + date.getMinutes();
+        const rounded = Math.round(total / INTERVAL) * INTERVAL;
+        return Math.max(START_MINUTES, Math.min(END_MINUTES, rounded));
+      }
+
+      function formatHours(n) { return `${n >= 0 ? "+" : ""}${n.toFixed(2)}h`; }
+      function valueClass(n) { return n < 0 ? "negative" : "positive"; }
+
+      function computeWeek(week) {
+        const mondayToThursdayWorked = week.rows.slice(0, 4).reduce((sum, row) => {
+          const start = timeToMinutes(row.start);
+          const finish = timeToMinutes(row.finish);
+          const rawWorked = start != null && finish != null ? (finish - start) / 60 - LUNCH_HOURS : 0;
+          return sum + Math.max(0, rawWorked);
+        }, 0);
+
+        const fridayTargetWorked = Math.max(0, WEEKLY_HOURS - mondayToThursdayWorked);
+
+        const rows = week.rows.map((row, index) => {
+          const start = timeToMinutes(row.start);
+          const finish = timeToMinutes(row.finish);
+          const rawWorked = start != null && finish != null ? (finish - start) / 60 - LUNCH_HOURS : 0;
+          const worked = Math.max(0, rawWorked);
+          const dailyTargetWorked = index === 4 ? fridayTargetWorked : DAILY_HOURS;
+          const delta = worked - dailyTargetWorked;
+          const proposedFinishMinutes = start != null ? Math.round((start + (dailyTargetWorked + LUNCH_HOURS) * 60) / INTERVAL) * INTERVAL : null;
+          const proposedFinish = proposedFinishMinutes != null ? minutesToTime(proposedFinishMinutes) : "";
+          return { ...row, worked, delta, dailyTargetWorked, proposedFinish, proposedFinishMinutes };
+        });
+
+        const weekBalance = rows.reduce((sum, row) => sum + row.worked, 0) - WEEKLY_HOURS;
+        return { rows, weekBalance, fridayTargetWorked };
+      }
+
+      function computedWeeks() { return state.weeks.map(computeWeek); }
+
+      function ensureWeekExists(index) {
+        while (state.weeks.length <= index) {
+          const lastMonday = isoToDate(state.weeks[state.weeks.length - 1].monday);
+          state.weeks.push(createWeek(dateToISO(addDays(lastMonday, 7))));
+        }
+      }
+
+      function previousWeek() {
+        if (state.currentWeek > 0) {
+          state.currentWeek -= 1;
+          render();
+        }
+      }
+
+      function nextWeek() {
+        if (state.currentWeek === state.weeks.length - 1) ensureWeekExists(state.currentWeek + 1);
+        state.currentWeek += 1;
+        render();
+      }
+
+      function updateSummary(carryIn, weekBalance, carryOut, totalBalance, fridayTargetWorked, remainingText, remainingClass) {
+        setSummary(els.carryIn, carryIn, true);
+        setSummary(els.weekBalance, weekBalance, true);
+        setSummary(els.carryOut, carryOut, true);
+        setSummary(els.totalBalance, totalBalance, true);
+        els.fridayTarget.textContent = `${fridayTargetWorked.toFixed(2)}h`;
+        els.fridayTarget.className = `tile-value ${fridayTargetWorked > DAILY_HOURS ? "negative" : "positive"}`;
+        els.remainingToday.textContent = remainingText;
+        els.remainingToday.className = `tile-value ${remainingClass}`;
+      }
+
+      function setSummary(el, value, signed) {
+        el.textContent = signed ? formatHours(value) : String(value);
+        el.className = `tile-value ${valueClass(value)}`;
+      }
+
+      function updateCurrentTime(computedCurrent) {
+        const now = new Date();
+        els.currentTime.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+        const todayISO = dateToISO(new Date());
+        const todayRow = computedCurrent.rows.find((row) => row.date === todayISO);
+        if (!todayRow) {
+          els.remainingToday.textContent = "Not this week";
+          els.remainingToday.className = "tile-value";
+          return;
+        }
+
+        if (!todayRow.start) {
+          els.remainingToday.textContent = "Set start";
+          els.remainingToday.className = "tile-value";
+          return;
+        }
+
+        if (todayRow.finish) {
+          els.remainingToday.textContent = "Done today";
+          els.remainingToday.className = "tile-value positive";
+          return;
+        }
+
+        if (!todayRow.proposedFinishMinutes) {
+          els.remainingToday.textContent = "--";
+          els.remainingToday.className = "tile-value";
+          return;
+        }
+
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        const diff = todayRow.proposedFinishMinutes - currentMinutes;
+        const abs = Math.abs(diff);
+        const hours = Math.floor(abs / 60);
+        const minutes = String(abs % 60).padStart(2, '0');
+        const text = `${diff >= 0 ? '' : 'Past target '} ${hours}:${minutes}`.trim();
+        els.remainingToday.textContent = diff >= 0 ? `${hours}:${minutes} left` : text;
+        els.remainingToday.className = `tile-value ${diff >= 0 ? 'positive' : 'negative'}`;
+      }
+
+      function renderWeekOptions() {
+        els.weekSelect.innerHTML = "";
+        state.weeks.forEach((week, index) => {
+          const monday = isoToDate(week.monday);
+          const friday = addDays(monday, 4);
+          const option = document.createElement('option');
+          option.value = String(index);
+          option.textContent = `Week ${index + 1} · ${monday.toLocaleDateString(undefined, { day: '2-digit', month: 'short' })} – ${friday.toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}`;
+          if (index === state.currentWeek) option.selected = true;
+          els.weekSelect.appendChild(option);
+        });
+
+        const currentWeek = state.weeks[state.currentWeek];
+        const monday = isoToDate(currentWeek.monday);
+        const friday = addDays(monday, 4);
+        els.weekCaption.textContent = `Week commencing ${monday.toLocaleDateString(undefined, { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })} · Friday ${friday.toLocaleDateString(undefined, { day: '2-digit', month: 'long' })}`;
+      }
+
+      function buildTimeSelect(value, onChange, placeholder) {
+        const select = document.createElement('select');
+        select.className = 'field';
+        const empty = document.createElement('option');
+        empty.value = '';
+        empty.textContent = placeholder || '--';
+        select.appendChild(empty);
+        timeOptions.forEach((time) => {
+          const option = document.createElement('option');
+          option.value = time;
+          option.textContent = time;
+          if (time === value) option.selected = true;
+          select.appendChild(option);
+        });
+        select.addEventListener('change', onChange);
+        return select;
+      }
+
+      function clockNow(index, field) {
+        const rounded = minutesToTime(roundToQuarterMinutes(new Date()));
+        updateRow(index, field, rounded, true);
+      }
+
+      function buildClockButtons(index) {
+        const wrap = document.createElement('div');
+        wrap.style.display = 'flex';
+        wrap.style.flexWrap = 'wrap';
+        wrap.style.gap = '8px';
+
+        const inBtn = document.createElement('button');
+        inBtn.className = 'btn btn-soft btn-small';
+        inBtn.textContent = 'Clock in';
+        inBtn.addEventListener('click', () => clockNow(index, 'start'));
+
+        const outBtn = document.createElement('button');
+        outBtn.className = 'btn btn-soft btn-small';
+        outBtn.textContent = 'Clock out';
+        outBtn.addEventListener('click', () => clockNow(index, 'finish'));
+
+        wrap.append(inBtn, outBtn);
+        return wrap;
+      }
+
+      function renderTable(rows) {
+        els.tableBody.innerHTML = '';
+        rows.forEach((row, index) => {
+          const tr = document.createElement('tr');
+
+          const dayTd = document.createElement('td');
+          dayTd.className = 'day-col';
+          dayTd.textContent = row.day;
+
+          const dateTd = document.createElement('td');
+          dateTd.className = 'date-col';
+          dateTd.textContent = formatDatePretty(row.date);
+
+          const startTd = document.createElement('td');
+          startTd.appendChild(buildTimeSelect(row.start, (e) => updateRow(index, 'start', e.target.value), 'Start'));
+
+          const lunchTd = document.createElement('td');
+          lunchTd.className = 'lunch-cell';
+          const lunch = document.createElement('span');
+          lunch.className = 'lunch-badge';
+          lunch.textContent = '30 min';
+          lunchTd.appendChild(lunch);
+
+          const finishTd = document.createElement('td');
+          finishTd.appendChild(buildTimeSelect(row.finish, (e) => updateRow(index, 'finish', e.target.value), 'Finish'));
+
+          const clockTd = document.createElement('td');
+          clockTd.className = 'clock-cell';
+          clockTd.appendChild(buildClockButtons(index));
+
+          const proposedTd = document.createElement('td');
+          proposedTd.className = 'proposed-cell';
+          proposedTd.innerHTML = row.proposedFinish
+            ? `${row.proposedFinish}<small>${index === 4 ? `Friday target ${row.dailyTargetWorked.toFixed(2)}h + 30m lunch` : `7.25h + 30m lunch`}</small>`
+            : `<span style="color:#94a3b8;">—</span>`;
+
+          const workedTd = document.createElement('td');
+          workedTd.className = 'worked-cell';
+          workedTd.textContent = `${row.worked.toFixed(2)} hrs`;
+
+          const deltaTd = document.createElement('td');
+          deltaTd.className = `delta-cell ${valueClass(row.delta)}`;
+          deltaTd.textContent = formatHours(row.delta);
+
+          tr.append(dayTd, dateTd, startTd, lunchTd, finishTd, clockTd, proposedTd, workedTd, deltaTd);
+          els.tableBody.appendChild(tr);
+        });
+      }
+
+      function renderMobile(rows) {
+        els.mobileList.innerHTML = '';
+        rows.forEach((row, index) => {
+          const card = document.createElement('div');
+          card.className = 'card';
+
+          const top = document.createElement('div');
+          top.className = 'card-top';
+          const left = document.createElement('div');
+          left.innerHTML = `<div class="card-day">${row.day}</div><div class="card-date">${formatDatePretty(row.date)}</div>`;
+          const right = document.createElement('div');
+          right.innerHTML = `<span class="${valueClass(row.delta)}" style="font-weight:900;">${formatHours(row.delta)}</span>`;
+          top.append(left, right);
+
+          const grid = document.createElement('div');
+          grid.className = 'card-grid';
+          grid.append(
+            buildTimeSelect(row.start, (e) => updateRow(index, 'start', e.target.value), 'Start'),
+            buildTimeSelect(row.finish, (e) => updateRow(index, 'finish', e.target.value), 'Finish')
+          );
+
+          const clock = document.createElement('div');
+          clock.className = 'card-clock';
+          const lunchBadge = document.createElement('span');
+          lunchBadge.className = 'lunch-badge';
+          lunchBadge.textContent = 'Lunch 30 min';
+          clock.append(buildClockButtons(index), lunchBadge);
+
+          const bottom = document.createElement('div');
+          bottom.className = 'card-bottom';
+          bottom.innerHTML = `
+            <div>Proposed finish: <strong>${row.proposedFinish || '—'}</strong></div>
+            <div>${index === 4 ? `Friday target ${row.dailyTargetWorked.toFixed(2)}h + lunch` : `Daily target 7.25h + lunch`}</div>
+            <div>Worked: <strong>${row.worked.toFixed(2)}h</strong></div>
+          `;
+
+          card.append(top, grid, clock, bottom);
+          els.mobileList.appendChild(card);
+        });
+      }
+
+      function render() {
+        saveState();
+        const allWeeks = computedWeeks();
+        const current = allWeeks[state.currentWeek] || { rows: [], weekBalance: 0, fridayTargetWorked: DAILY_HOURS };
+        const carryIn = allWeeks.slice(0, state.currentWeek).reduce((sum, week) => sum + week.weekBalance, 0);
+        const carryOut = carryIn + current.weekBalance;
+        const totalBalance = allWeeks.reduce((sum, week) => sum + week.weekBalance, 0);
+
+        renderWeekOptions();
+        renderTable(current.rows);
+        renderMobile(current.rows);
+        updateSummary(carryIn, current.weekBalance, carryOut, totalBalance, current.fridayTargetWorked, 'Set start', 'positive');
+        updateCurrentTime(current);
+      }
+
+      function updateRow(index, field, value, silent) {
+        const week = state.weeks[state.currentWeek];
+        if (!week || !week.rows || !week.rows[index]) return;
+        const row = { ...week.rows[index], [field]: value };
+        const start = timeToMinutes(row.start);
+        const finish = timeToMinutes(row.finish);
+
+        if (start != null && finish != null && finish < start) {
+          row.finish = row.start;
+          if (!silent) showNotice('Finish time cannot be earlier than start time. Adjusted automatically.');
+        }
+
+        week.rows[index] = row;
+
+        if (field === 'start' && value && !silent) {
+          const computed = computeWeek(week);
+          const proposed = computed.rows[index].proposedFinish;
+          if (proposed) {
+            showNotice(`${row.day}: proposed finish ${proposed}${index === 4 ? ' (Friday adjusted for weekly balance)' : ''}.`);
+          }
+        }
+
+        if (silent) {
+          showNotice(`${row.day}: ${field === 'start' ? 'clocked in' : 'clocked out'} at ${value} (rounded to 15 minutes).`);
+        }
+
+        render();
+      }
+
+      function resetAll() {
+        if (!window.confirm('Reset all saved timesheet data?')) return;
+        localStorage.removeItem(STORAGE_KEY);
+        state = initialState();
+        render();
+      }
+
+      function csvEscape(value) {
+        const s = String(value ?? '');
+        const needsWrap = /[",\n]/.test(s);
+        const escaped = s.replace(/"/g, '""');
+        return needsWrap ? `"${escaped}"` : escaped;
+      }
+
+      function exportWeekCSV() {
+        const current = computeWeek(state.weeks[state.currentWeek]);
+        const allWeeks = computedWeeks();
+        const carryIn = allWeeks.slice(0, state.currentWeek).reduce((sum, w) => sum + w.weekBalance, 0);
+        const carryOut = carryIn + current.weekBalance;
+        const totalBalance = allWeeks.reduce((sum, w) => sum + w.weekBalance, 0);
+
+        const lines = [
+          ['Day', 'Date', 'Start', 'Lunch', 'Finish', 'Proposed finish', 'Target worked (hrs)', 'Worked (hrs)', 'Daily +/- (hrs)'].map(csvEscape).join(',')
+        ];
+
+        current.rows.forEach((row) => {
+          lines.push([
+            row.day,
+            row.date,
+            row.start,
+            '0.50',
+            row.finish,
+            row.proposedFinish,
+            row.dailyTargetWorked.toFixed(2),
+            row.worked.toFixed(2),
+            row.delta.toFixed(2)
+          ].map(csvEscape).join(','));
+        });
+
+        lines.push('');
+        lines.push(`${csvEscape('Weekly balance (hrs)')},${current.weekBalance.toFixed(2)}`);
+        lines.push(`${csvEscape('Carry-in (hrs)')},${carryIn.toFixed(2)}`);
+        lines.push(`${csvEscape('Carry-out (hrs)')},${carryOut.toFixed(2)}`);
+        lines.push(`${csvEscape('Total balance (hrs)')},${totalBalance.toFixed(2)}`);
+        lines.push(`${csvEscape('Friday target worked (hrs)')},${current.fridayTargetWorked.toFixed(2)}`);
+
+        const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+        downloadBlob(blob, `timesheet_week_${state.currentWeek + 1}.csv`);
+      }
+
+      function exportWeekExcel() {
+        const current = computeWeek(state.weeks[state.currentWeek]);
+        const allWeeks = computedWeeks();
+        const carryIn = allWeeks.slice(0, state.currentWeek).reduce((sum, w) => sum + w.weekBalance, 0);
+        const carryOut = carryIn + current.weekBalance;
+        const totalBalance = allWeeks.reduce((sum, w) => sum + w.weekBalance, 0);
+
+        const rowsHtml = current.rows.map((row) => `
+          <tr>
+            <td>${row.day}</td>
+            <td>${row.date}</td>
+            <td>${row.start || ''}</td>
+            <td>0.50</td>
+            <td>${row.finish || ''}</td>
+            <td>${row.proposedFinish || ''}</td>
+            <td>${row.dailyTargetWorked.toFixed(2)}</td>
+            <td>${row.worked.toFixed(2)}</td>
+            <td>${row.delta.toFixed(2)}</td>
+          </tr>
+        `).join('');
+
+        const html = `
+          <html>
+            <head><meta charset="utf-8"></head>
+            <body>
+              <table border="1">
+                <thead>
+                  <tr>
+                    <th>Day</th><th>Date</th><th>Start</th><th>Lunch (hrs)</th><th>Finish</th><th>Proposed finish</th><th>Target worked (hrs)</th><th>Worked (hrs)</th><th>Daily +/- (hrs)</th>
+                  </tr>
+                </thead>
+                <tbody>${rowsHtml}</tbody>
+              </table>
+              <br>
+              <table border="1">
+                <tbody>
+                  <tr><td>Weekly balance (hrs)</td><td>${current.weekBalance.toFixed(2)}</td></tr>
+                  <tr><td>Carry-in (hrs)</td><td>${carryIn.toFixed(2)}</td></tr>
+                  <tr><td>Carry-out (hrs)</td><td>${carryOut.toFixed(2)}</td></tr>
+                  <tr><td>Total balance (hrs)</td><td>${totalBalance.toFixed(2)}</td></tr>
+                  <tr><td>Friday target worked (hrs)</td><td>${current.fridayTargetWorked.toFixed(2)}</td></tr>
+                </tbody>
+              </table>
+            </body>
+          </html>
+        `;
+
+        const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+        downloadBlob(blob, `timesheet_week_${state.currentWeek + 1}.xls`);
+      }
+
+      function downloadBlob(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      document.getElementById('prevWeekBtn').addEventListener('click', previousWeek);
+      document.getElementById('nextWeekBtn').addEventListener('click', nextWeek);
+      document.getElementById('resetBtn').addEventListener('click', resetAll);
+      document.getElementById('exportCsvBtn').addEventListener('click', exportWeekCSV);
+      document.getElementById('exportXlsBtn').addEventListener('click', exportWeekExcel);
+      els.weekSelect.addEventListener('change', (e) => {
+        state.currentWeek = Number(e.target.value);
+        render();
+      });
+
+      render();
+      setInterval(() => {
+        const current = computeWeek(state.weeks[state.currentWeek]);
+        updateCurrentTime(current);
+      }, 1000);
+    })();
+  </script>
+</body>
+</html>
